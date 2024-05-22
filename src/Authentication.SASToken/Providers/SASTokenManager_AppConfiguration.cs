@@ -10,9 +10,10 @@ using System.Xml.Linq;
 
 namespace Authentication.SASToken.Providers
 {
-    public class SASTokenManager_AppConfiguration : ITokenSourceStore, ITokenSourceProvider
+    public class SASTokenManager_AppConfiguration : ITokenSourceStore
     {
-        public Dictionary<string, TokenSource?> _tokenSources = new Dictionary<string, TokenSource?>(System.StringComparer.InvariantCultureIgnoreCase);
+        private List<TokenSource> _tokenSources = new List<TokenSource>();
+        private Dictionary<string, TokenSource?> _tokenSourceLookup = new Dictionary<string, TokenSource?>(System.StringComparer.InvariantCultureIgnoreCase);
         public SASTokenManager_AppConfiguration(IOptions<SASTokenManager_AppConfiguration.Options> options, IConfiguration config)
         {
             var re = options.Value.SASTokenNameMatch;
@@ -73,23 +74,25 @@ namespace Authentication.SASToken.Providers
                         Secret = secret,
                         Uri = new Uri(path, path.StartsWith("http")?UriKind.Absolute:UriKind.Relative)
                     };
-                    _tokenSources[tokenSource.Name] = tokenSource;
-                    _tokenSources[tokenSource.Id.ToString()] = tokenSource;
+                    _tokenSources.Add(tokenSource);
+                    _tokenSourceLookup[tokenSource.Name] = tokenSource;
+                    _tokenSourceLookup[tokenSource.Id.ToString()] = tokenSource;
                 }
             }
+            _tokenSources.Sort((ts1, ts2) => ts1.Name.CompareTo(ts2.Name));
         }
 
         public Task<TokenSource?> GetAsync(string name)
         {
             TokenSource? retVal;
-            _tokenSources.TryGetValue(name, out retVal);
+            _tokenSourceLookup.TryGetValue(name, out retVal);
             return Task.FromResult(retVal);
         }
 
         public Task<TokenSource?> GetAsync(Guid id)
         {
             TokenSource? retVal;
-            _tokenSources.TryGetValue(id.ToString(), out retVal);
+            _tokenSourceLookup.TryGetValue(id.ToString(), out retVal);
             return Task.FromResult(retVal);
         }
 
@@ -97,9 +100,13 @@ namespace Authentication.SASToken.Providers
 
         public Task<IEnumerable<string>> GetNamesAsync()
         {
-            return Task.FromResult((IEnumerable<string>)_tokenSources.Values.Select(ts => ts.Value.Name).Distinct().OrderBy(n => n));
+            return Task.FromResult((IEnumerable<string>)_tokenSources.Select(ts => ts.Name));
         }
 
+        public Task<IEnumerable<TokenSource>> GetAllAsync()
+        {
+            return Task.FromResult((IEnumerable<TokenSource>)_tokenSources);
+        }
         public Task<TokenSource?> SaveAsync(TokenSource token)
         {
             throw new NotSupportedException();
@@ -109,6 +116,7 @@ namespace Authentication.SASToken.Providers
         {
             throw new NotSupportedException();
         }
+
 
         public class Options
         {

@@ -15,7 +15,7 @@ namespace Authentication.SASToken.Authentication
 
 		}
 
-		public virtual Func<IServiceProvider, Task<ITokenSourceStore>> TokenStoreResolverAsync { get; set; } = (sp) => Task.FromResult(sp.GetService<ITokenSourceStore>());
+		public virtual Func<IServiceProvider, Task<ITokenSourceResolver>> TokenStoreResolverAsync { get; set; } = (sp) => Task.FromResult(sp.GetService<ITokenSourceResolver>());
 
         /// <summary>
         /// The Provider may be assigned to an instance of an object created by the application at startup time. The handler

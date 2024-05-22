@@ -56,7 +56,7 @@ namespace Authentication.SASToken.Tests
 
 
             var sp = services.BuildServiceProvider();
-            var appConfig = sp.GetService<ITokenSourceProvider>()!;
+            var appConfig = sp.GetService<ITokenSourceStore>()!;
 
             var testSource = appConfig.GetAsync("test").Result;
             Assert.IsNotNull(testSource);
@@ -132,7 +132,7 @@ namespace Authentication.SASToken.Tests
 
 
             var sp = services.BuildServiceProvider();
-            var appConfig = sp.GetService<ITokenSourceProvider>()!;
+            var appConfig = sp.GetService<ITokenSourceStore>()!;
 
             var testSource = appConfig.GetAsync("test").Result;
             Assert.IsNotNull(testSource);
@@ -197,7 +197,7 @@ namespace Authentication.SASToken.Tests
 
 
             var sp = services.BuildServiceProvider();
-            var appConfig = sp.GetService<ITokenSourceProvider>()!;
+            var appConfig = sp.GetService<ITokenSourceStore>()!;
 
             var testSource = appConfig.GetAsync("test").Result;
             Assert.IsNotNull(testSource);
@@ -263,7 +263,7 @@ namespace Authentication.SASToken.Tests
 
 
             var sp = services.BuildServiceProvider();
-            var appConfig = sp.GetService<ITokenSourceProvider>()!;
+            var appConfig = sp.GetService<ITokenSourceStore>()!;
 
             var testSource = appConfig.GetAsync("test").Result;
             Assert.IsNotNull(testSource);
@@ -338,7 +338,7 @@ namespace Authentication.SASToken.Tests
 
 
             var sp = services.BuildServiceProvider();
-            var appConfig = sp.GetService<ITokenSourceProvider>()!;
+            var appConfig = sp.GetService<ITokenSourceStore>()!;
 
             var testSource = appConfig.GetAsync("test").Result;
             Assert.IsNotNull(testSource);

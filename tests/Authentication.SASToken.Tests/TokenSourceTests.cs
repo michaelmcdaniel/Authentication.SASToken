@@ -332,7 +332,7 @@ namespace Authentication.SASToken.Tests
             services.AddSASTokenStore_AppConfiguration();
             var sp = services.BuildServiceProvider();
             var inMemory = sp.GetService<SASTokenManager_InMemory>();
-            var appConfig = sp.GetService<ITokenSourceProvider>();
+            var appConfig = sp.GetService<ITokenSourceStore>();
 
             var test = appConfig!.GetAsync("test").Result;
             Assert.IsNotNull(test);

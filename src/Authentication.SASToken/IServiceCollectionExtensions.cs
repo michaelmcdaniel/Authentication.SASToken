@@ -48,7 +48,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.Configure(configure??new Action<SASTokenManager_AppConfiguration.Options>(_ => { }));
             services.AddSingleton<SASTokenManager_AppConfiguration>();
-            services.AddTransient<ITokenSourceProvider>(sp => sp.GetService<SASTokenManager_AppConfiguration>());
+            services.AddTransient<ITokenSourceResolver>(sp => sp.GetService<SASTokenManager_AppConfiguration>());
             services.AddTransient<ITokenSourceStore>(sp => sp.GetService<SASTokenManager_AppConfiguration>());
             return services;
         }
@@ -61,7 +61,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddSASTokenStore_InMemory(this IServiceCollection services)
         {
             services.AddSingleton<SASTokenManager_InMemory>();
-            services.AddTransient<ITokenSourceProvider>(sp => sp.GetService<SASTokenManager_InMemory>());
+            services.AddTransient<ITokenSourceResolver>(sp => sp.GetService<SASTokenManager_InMemory>());
             services.AddTransient<ITokenSourceStore>(sp => sp.GetService<SASTokenManager_InMemory>());
             return services;
         }

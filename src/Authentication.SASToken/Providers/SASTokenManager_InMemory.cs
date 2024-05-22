@@ -6,14 +6,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Authentication.SASToken.Providers
 {
-    public class SASTokenManager_InMemory : ITokenSourceStore, ITokenSourceProvider
+    public class SASTokenManager_InMemory : ITokenSourceStore
     {
-        public ConcurrentDictionary<string, TokenSource?> _tokenSources = new ConcurrentDictionary<string, TokenSource?>(System.StringComparer.InvariantCultureIgnoreCase);
+        private ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
+        private List<TokenSource> _tokenSources = new List<TokenSource>();
+        private Dictionary<string, TokenSource?> _tokenSourceLookup = new Dictionary<string, TokenSource?>(System.StringComparer.InvariantCultureIgnoreCase);
         public SASTokenManager_InMemory()
         {
             
@@ -22,14 +25,30 @@ namespace Authentication.SASToken.Providers
         public Task<TokenSource?> GetAsync(string name)
         {
             TokenSource? retVal;
-            _tokenSources.TryGetValue(name, out retVal);
+            try
+            {
+                _lock.EnterReadLock();
+                _tokenSourceLookup.TryGetValue(name, out retVal);
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
             return Task.FromResult(retVal);
         }
 
         public Task<TokenSource?> GetAsync(Guid id)
         {
             TokenSource? retVal;
-            _tokenSources.TryGetValue(id.ToString(), out retVal);
+            try
+            {
+                _lock.EnterReadLock();
+                _tokenSourceLookup.TryGetValue(id.ToString(), out retVal);
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
             return Task.FromResult(retVal);
         }
 
@@ -37,19 +56,80 @@ namespace Authentication.SASToken.Providers
 
         public Task<IEnumerable<string>> GetNamesAsync()
         {
-            return Task.FromResult((IEnumerable<string>)_tokenSources.Values.Select(ts => ts.Value.Name).Distinct().OrderBy(n => n));
+            List<string> retVal = new List<string>();
+            try
+            {
+                _lock.EnterReadLock();
+                retVal.AddRange(_tokenSources.Select(ts => ts.Name));
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+            return Task.FromResult((IEnumerable<string>)retVal);
+        }
+
+        public Task<IEnumerable<TokenSource>> GetAllAsync()
+        {
+            List<TokenSource> retVal = new List<TokenSource>();
+            try
+            {
+                _lock.EnterReadLock();
+                retVal.AddRange(_tokenSources);
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+            return Task.FromResult((IEnumerable<TokenSource>) retVal);
         }
 
         public Task<TokenSource?> SaveAsync(TokenSource token)
         {
-            _tokenSources.AddOrUpdate(token.Id.ToString(), token, (s, ts) => { return token; });
-            _tokenSources.AddOrUpdate(token.Name, token, (s, ts) => { return token; });
+            try
+            {
+                _lock.EnterWriteLock();
+                int index = _tokenSources.FindIndex(ts => ts.Id == token.Id);
+                if (index < 0)
+                {
+                    _tokenSources.Add(token);
+                    _tokenSourceLookup[token.Id.ToString()] = token;
+                    _tokenSourceLookup[token.Name] = token;
+                }
+                else
+                {
+                    TokenSource existing = new TokenSource(_tokenSources[index]);
+                    _tokenSources[index] = token;
+                    if (existing.Name !=  token.Name) { _tokenSourceLookup.Remove(existing.Name); }
+                    _tokenSourceLookup[token.Name] = token;
+                    _tokenSourceLookup[token.Id.ToString()] = token;
+                }
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
             return Task.FromResult((TokenSource?)token);
         }
 
         public Task<bool> RemoveAsync(TokenSource token)
         {
-            return Task.FromResult(_tokenSources.Remove(token.Id.ToString(), out TokenSource? value1) && _tokenSources.Remove(token.Name, out TokenSource? value2));
+            bool removed;
+            try
+            {
+                _lock.EnterWriteLock();
+                removed = _tokenSources.Remove(token);
+                if (removed)
+                {
+                    _tokenSourceLookup.Remove(token.Name);
+                    _tokenSourceLookup.Remove(token.Id.ToString());
+                }
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
+            return Task.FromResult(removed);
         }
 
         public class Options

@@ -12,12 +12,12 @@ namespace Microsoft.AspNetCore.Builder
         /// <param name="app"></param>
         /// <param name="initialize">Add in-memory TokenSources</param>
         /// <returns></returns>
-        public static IApplicationBuilder UseSASTokenStore_InMemory(this IApplicationBuilder app, Action<IServiceProvider, ITokenSourceProvider> initialize)
+        public static IApplicationBuilder UseSASTokenStore_InMemory(this IApplicationBuilder app, Action<IServiceProvider, ITokenSourceStore> initialize)
         {
-            var tokenStoreProvider = app.ApplicationServices.GetService<ITokenSourceProvider>();
+            var tokenStoreStore = app.ApplicationServices.GetService<ITokenSourceStore>();
             if (initialize != null)
             {
-                initialize(app.ApplicationServices, tokenStoreProvider);
+                initialize(app.ApplicationServices, tokenStoreStore);
             }
             return app;
         }

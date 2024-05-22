@@ -42,6 +42,27 @@ namespace Authentication.SASToken
             Signatures.Add(VERSION_RELATIVE_URI, (uri, exp, _) => $"{(uri.IsAbsoluteUri? uri.AbsolutePath:uri.OriginalString)}");
         }
 
+        public TokenSource()
+        {
+            Id = Guid.Empty;
+            Name = string.Empty;
+            Version = string.Empty;
+            Uri = new Uri("/", UriKind.Relative);
+            Secret = string.Empty;
+            Signature = null;
+            Expiration = TimeSpan.MaxValue;
+        }
+
+        public TokenSource(TokenSource copy)
+        {
+            Id = copy.Id;
+            Name = copy.Name;
+            Secret = copy.Secret;
+            Uri = copy.Uri;
+            Version = copy.Version;
+            Signature = copy.Signature;
+            Expiration = copy.Expiration;
+        }
 
         /// <summary>
         /// This is the public id that is used to match client validation with server secret.

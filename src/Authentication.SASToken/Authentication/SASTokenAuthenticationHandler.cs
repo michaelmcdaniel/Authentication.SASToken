@@ -60,7 +60,7 @@ namespace Authentication.SASToken.Authentication
 			}
 
 
-			ITokenSourceStore store = await Options.TokenStoreResolverAsync(Context.RequestServices);
+			ITokenSourceResolver store = await Options.TokenStoreResolverAsync(Context.RequestServices);
 			if (store is null)
 			{
 				return AuthenticateResult.Fail("Token store not found");

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Authentication.SASToken.Authentication
 {
-	public class SASTokenSourceOptions : SASTokenAuthenticationOptions, ITokenSourceStore
+	public class SASTokenSourceOptions : SASTokenAuthenticationOptions, ITokenSourceResolver
 	{
 		public Guid Id { get; set; }
 
@@ -20,9 +20,9 @@ namespace Authentication.SASToken.Authentication
 
         public Func<Uri, DateTimeOffset, string, string>? Signature { get; set; } = null;
 
-		public override Func<IServiceProvider, Task<ITokenSourceStore>> TokenStoreResolverAsync 
+		public override Func<IServiceProvider, Task<ITokenSourceResolver>> TokenStoreResolverAsync 
 		{
-			get { return _ => Task.FromResult<ITokenSourceStore>(this); }
+			get { return _ => Task.FromResult<ITokenSourceResolver>(this); }
 			set => throw new NotSupportedException(); 
 		}
 

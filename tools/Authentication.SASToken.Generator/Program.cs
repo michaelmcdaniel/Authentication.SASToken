@@ -54,7 +54,7 @@ namespace Authentication.SASToken.Generator
         {
             var color = Console.ForegroundColor;
             string? sasName = null;
-            var tsProvider = Services!.GetService<ITokenSourceProvider>()!;
+            var tsProvider = Services!.GetService<ITokenSourceStore>()!;
             var available = tsProvider.GetNamesAsync().Result.ToList();
             if (available != null && available.Count() > 0)
             {

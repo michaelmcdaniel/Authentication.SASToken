@@ -13,10 +13,18 @@ using System.Xml.Linq;
 
 namespace Authentication.SASToken.Providers
 {
+	/// <summary>
+	/// SATTokenKeyStore that gets SASTokenKeys from App Configuration
+	/// </summary>
     public class SASTokenManager_AppConfiguration : ISASTokenKeyStore
     {
         private Dictionary<string, SASTokenKey?> _tokens = new Dictionary<string, SASTokenKey?>(System.StringComparer.InvariantCultureIgnoreCase);
 
+		/// <summary>
+		/// Constructor
+		/// </summary>
+		/// <param name="options"></param>
+		/// <param name="config"></param>
         public SASTokenManager_AppConfiguration(IOptions<SASTokenManager_AppConfiguration.Options> options, IConfiguration config)
         {
 			Uri uri;
@@ -97,39 +105,64 @@ namespace Authentication.SASToken.Providers
             }
         }
 
-        public Task<SASTokenKey?> GetAsync(string name)
+		/// <summary>
+		/// Gets a SASTokenKey by Id
+		/// </summary>
+		/// <param name="Id">The id to find</param>
+		/// <returns>Key if found</returns>
+        public Task<SASTokenKey?> GetAsync(string Id)
         {
             SASTokenKey? retVal;
-            _tokens.TryGetValue(name, out retVal);
+            _tokens.TryGetValue(Id, out retVal);
             return Task.FromResult(retVal);
         }
 
-        public Task<SASTokenKey?> GetAsync(Guid id)
-        {
-            SASTokenKey? retVal;
-            _tokens.TryGetValue(id.ToString(), out retVal);
-            return Task.FromResult(retVal);
-        }
+		/// <summary>
+		/// Gets a SASTokenKey by token.Id
+		/// </summary>
+		/// <param name="token">The token to use</param>
+		/// <returns>Key if found</returns>
+		public Task<SASTokenKey?> GetAsync(SASToken token) => GetAsync(token.Id);
 
-        public Task<SASTokenKey?> GetAsync(SASToken token) => GetAsync(token.Id);
-
+		/// <summary>
+		/// Returns all SASTokenKeys sorted by Description, Id
+		/// </summary>
+		/// <returns>SASTokenKeys</returns>
         public Task<IEnumerable<SASTokenKey>> GetAllAsync()
         {
             return Task.FromResult((IEnumerable<SASTokenKey>)(_tokens.Values.OrderBy(tk=>string.IsNullOrWhiteSpace(tk.Value.Description)?tk.Value.Id:tk.Value.Description).Select(tk=>tk.Value).ToArray()));
         }
+
+		/// <summary>
+		/// Not Supported
+		/// </summary>
+		/// <param name="token"></param>
+		/// <returns></returns>
+		/// <exception cref="NotSupportedException">Not supported</exception>
         public Task<SASTokenKey?> SaveAsync(SASTokenKey token)
         {
             throw new NotSupportedException();
         }
 
-        public Task<bool> DeleteAsync(SASTokenKey token)
+		/// <summary>
+		/// Not Supported
+		/// </summary>
+		/// <param name="token"></param>
+		/// <returns></returns>
+		/// <exception cref="NotSupportedException">Not supported</exception>
+		public Task<bool> DeleteAsync(SASTokenKey token)
         {
             throw new NotSupportedException();
         }
 
-
+		/// <summary>
+		/// Configuration options for App Configuration
+		/// </summary>
         public class Options
         {
+			/// <summary>
+			/// The root section name
+			/// </summary>
             public string SectionName { get; set; } = "SASTokenKeys";
             /// <summary>
             /// key name for id field.  value must be a valid GUID format

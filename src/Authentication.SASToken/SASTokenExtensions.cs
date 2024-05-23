@@ -7,13 +7,16 @@ using Microsoft.AspNetCore.Http.Extensions;
 
 namespace Authentication.SASToken
 {
+	/// <summary>
+	/// Extensions for SASTokens
+	/// </summary>
 	public static class SASTokenExtensions
 	{
-        /// <summary>
-        /// Extension Method: Gets a SASToken from HttpContext
-        /// </summary>
-        /// <param name="request">HttpRequest</param>
-        /// <returns>SASToken if found, otherwise SASToken.Empty</returns>
+		/// <summary>
+		/// Extension Method: Gets a SASToken from HttpContext
+		/// </summary>
+		/// <param name="context">HttpContext</param>
+		/// <returns>SASToken if found, otherwise SASToken.Empty</returns>
 		public static SASToken GetSASToken(this Microsoft.AspNetCore.Http.HttpContext? context)
 		{
 			return context?.Request?.GetSASToken()??SASToken.Empty;

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 
 namespace Authentication.SASToken
 {
+	///<inherited/>
     public class SASTokenValidateTokenContext : PrincipalContext<SASTokenAuthenticationOptions>
     {
         /// <summary>
@@ -13,7 +14,6 @@ namespace Authentication.SASToken
         /// </summary>
         /// <param name="context"></param>
         /// <param name="scheme"></param>
-        /// <param name="ticket">Contains the initial values for identity and extra data</param>
         /// <param name="options"></param>
         public SASTokenValidateTokenContext(HttpContext context, AuthenticationScheme scheme, SASTokenAuthenticationOptions options)
             : base(context, scheme, options, null)

@@ -13,16 +13,22 @@ using Microsoft.AspNetCore.Authentication;
 
 namespace Authentication.SASToken
 {
-    public class SASTokenAuthenticationHandler<T> : AuthenticationHandler<T> where T : SASTokenAuthenticationOptions, new()
+	/// <summary>
+	/// Handles authentication of SASTokens
+	/// </summary>
+	/// <typeparam name="T">SASTokenAuthenticationOptions</typeparam>
+	public class SASTokenAuthenticationHandler<T> : AuthenticationHandler<T> where T : SASTokenAuthenticationOptions, new()
     {
-		ILogger<SASTokenAuthenticationHandler<T>> _logger = null;
-        /// <summary>
-        /// Initializes a new instance of <see cref="CookieAuthenticationHandler"/>.
-        /// </summary>
-        /// <param name="options">Accessor to <see cref="CookieAuthenticationOptions"/>.</param>
-        /// <param name="logger">The <see cref="ILoggerFactory"/>.</param>
-        /// <param name="encoder">The <see cref="UrlEncoder"/>.</param>
-        [Obsolete]
+		private ILogger<SASTokenAuthenticationHandler<T>> _logger = null;
+
+		/// <summary>
+		/// Initializes a new instance of <see cref="SASTokenAuthenticationOptions"/>.
+		/// </summary>
+		/// <param name="options">Accessor to <see cref="SASTokenAuthenticationOptions"/>.</param>
+		/// <param name="logger">The <see cref="ILoggerFactory"/>.</param>
+		/// <param name="encoder">The <see cref="UrlEncoder"/>.</param>
+		/// <param name="clock"></param>
+		[Obsolete]
         public SASTokenAuthenticationHandler(IOptionsMonitor<T> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
             : base(options, logger, encoder, clock)
         {
@@ -51,7 +57,10 @@ namespace Authentication.SASToken
         protected override Task<object> CreateEventsAsync() => Task.FromResult<object>(new SASTokenAuthenticationEvents());
 
 
-        /// <inheritdoc />
+        /// <summary>
+		/// Validates SASToken if available
+		/// </summary>
+		/// <returns>Failed() or NoResult() if not valid</returns>
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             SASToken? token = Request.GetSASToken();

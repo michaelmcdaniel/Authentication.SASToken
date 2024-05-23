@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
 #nullable enable
 
@@ -43,6 +41,9 @@ namespace Authentication.SASToken
             Signatures.Add(VERSION_RELATIVE_URI, (uri, exp, r) => $"{(uri.IsAbsoluteUri? uri.AbsolutePath:uri.OriginalString)}\r\n{exp.ToUnixTimeSeconds()}\r\n{r ?? ""}");
         }
 
+		/// <summary>
+		/// Constructor
+		/// </summary>
         public SASTokenKey()
         {
             Id = string.Empty;
@@ -54,6 +55,10 @@ namespace Authentication.SASToken
             Expiration = TimeSpan.MaxValue;
         }
 
+		/// <summary>
+		/// Copy Constructor
+		/// </summary>
+		/// <param name="copy">Key to copy</param>
         public SASTokenKey(SASTokenKey copy)
         {
             Id = copy.Id;
@@ -191,13 +196,13 @@ namespace Authentication.SASToken
 		/// <returns>SASToken</returns>
 		public SASToken ToToken(params string[] roles) => ToToken((DateTimeOffset?)null, roles);
 
-        /// <summary>
-        /// Generates a new SASToken 
-        /// </summary>
-        /// <param name="expiration">Absolute expiration of token.</param>
-        /// <param name="resource">Additional information that maybe included in signature</param>
-        /// <returns>SASToken</returns>
-        public SASToken ToToken(DateTime expiration, params string[] roles) => ToToken(new DateTimeOffset(expiration.ToUniversalTime(), TimeSpan.Zero), roles);
+		/// <summary>
+		/// Generates a new SASToken 
+		/// </summary>
+		/// <param name="expiration">Absolute expiration of token.</param>
+		/// <param name="roles">Additional information that maybe included in signature</param>
+		/// <returns>SASToken</returns>
+		public SASToken ToToken(DateTime expiration, params string[] roles) => ToToken(new DateTimeOffset(expiration.ToUniversalTime(), TimeSpan.Zero), roles);
 
 
 		/// <summary>
@@ -206,6 +211,7 @@ namespace Authentication.SASToken
 		/// <param name="token">Token that was received from a request</param>
 		/// <param name="request">Current HttpRequest</param>
 		/// <param name="roles">list of roles to require the sastoken to have any of.  If null, no roles will be required.</param>
+		/// <param name="logger">a logger to use when validating tokens</param>
 		/// <returns>>true if the signatures match and not expired</returns>
 		public bool Validate(SASToken token, Microsoft.AspNetCore.Http.HttpRequest request, IEnumerable<string>? roles = null, Microsoft.Extensions.Logging.ILogger? logger = null)
 		{
@@ -218,6 +224,7 @@ namespace Authentication.SASToken
 		/// <param name="token">Token that was received from a request</param>
 		/// <param name="endpoint">current request path</param>
 		/// <param name="roles">list of roles to require the sastoken to have any of.  If null, no roles will be required.</param>
+		/// <param name="logger">a logger to use when validating tokens</param>
 		/// <returns>true if the signatures match and not expired</returns>
 		public bool Validate(SASToken token, Uri endpoint, IEnumerable<string>? roles = null, Microsoft.Extensions.Logging.ILogger? logger = null)
 		{

@@ -8,12 +8,21 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Authentication.SASToken
 {
+	/// <summary>
+	/// Options to configure SASToken Authentication
+	/// </summary>
     public class SASTokenAuthenticationOptions : AuthenticationSchemeOptions
     {
+		/// <summary>
+		/// Constructor
+		/// </summary>
         public SASTokenAuthenticationOptions()
         {
         }
 
+		/// <summary>
+		/// Provides a resolver to get SASTokenKeys
+		/// </summary>
         public virtual Func<IServiceProvider, Task<ISASTokenKeyResolver>> TokenStoreResolverAsync { get; set; } = (sp) => Task.FromResult(sp.GetService<ISASTokenKeyResolver>());
 
         /// <summary>

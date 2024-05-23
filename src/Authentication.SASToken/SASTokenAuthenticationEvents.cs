@@ -39,24 +39,24 @@ namespace Authentication.SASToken
                 string.Equals(request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.Ordinal);
         }
 
-        /// <summary>
-        /// Invoked to validate the principal.
-        /// </summary>
-        /// <param name="context">The <see cref="CookieValidatePrincipalContext"/>.</param>
-        public virtual Task ValidateToken(SASTokenValidateTokenContext context) => OnValidateToken(context);
+		/// <summary>
+		/// Invoked to validate the principal.
+		/// </summary>
+		/// <param name="context">The <see cref="SASTokenValidateTokenContext"/>.</param>
+		public virtual Task ValidateToken(SASTokenValidateTokenContext context) => OnValidateToken(context);
 
 
-        /// <summary>
-        /// Invoked during sign in.
-        /// </summary>
-        /// <param name="context">The <see cref="CookieSigningInContext"/>.</param>
-        public virtual Task Authenticating(SASTokenAuthenticatingContext context) => OnAuthenticatingToken(context);
+		/// <summary>
+		/// Invoked during sign in.
+		/// </summary>
+		/// <param name="context">The <see cref="SASTokenAuthenticatingContext"/>.</param>
+		public virtual Task Authenticating(SASTokenAuthenticatingContext context) => OnAuthenticatingToken(context);
 
-        /// <summary>
-        /// Invoked after sign in has completed.
-        /// </summary>
-        /// <param name="context">The <see cref="CookieSignedInContext"/>.</param>
-        public virtual Task Authenticated(SASTokenAuthenticatedContext context) => OnAuthenticatedToken(context);
+		/// <summary>
+		/// Invoked after sign in has completed.
+		/// </summary>
+		/// <param name="context">The <see cref="SASTokenAuthenticatedContext"/>.</param>
+		public virtual Task Authenticated(SASTokenAuthenticatedContext context) => OnAuthenticatedToken(context);
 
         /// <summary>
         /// Invoked if Authorization fails and results in a Forbidden response

@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
+	/// <summary>
+	/// Extensions for IServiceCollection
+	/// </summary>
 	public static class IServiceCollectionExtensions
     {
         /// <summary>

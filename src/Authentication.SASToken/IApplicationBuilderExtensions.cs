@@ -4,6 +4,9 @@ using Authentication.SASToken;
 
 namespace Microsoft.AspNetCore.Builder
 {
+	/// <summary>
+	/// Extensions for IApplicationBuilder
+	/// </summary>
     public static class IApplicationBuilderExtensions
     {
 		/// <summary>

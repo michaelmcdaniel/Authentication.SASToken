@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 
 using Microsoft.AspNetCore.Authentication;
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
 	///<inherited/>
     public class SASTokenValidateTokenContext : PrincipalContext<SASTokenAuthenticationOptions>

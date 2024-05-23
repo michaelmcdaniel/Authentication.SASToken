@@ -1,6 +1,6 @@
-using Authentication.SASToken.Providers;
+using mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers;
 
-namespace Authentication.SASToken.Tests
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Tests
 {
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Configuration;

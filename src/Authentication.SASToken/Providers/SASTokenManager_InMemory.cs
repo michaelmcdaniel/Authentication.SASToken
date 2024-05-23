@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Authentication.SASToken.Providers
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 {
 	/// <summary>
 	/// In-Memory SASTokenKey Store

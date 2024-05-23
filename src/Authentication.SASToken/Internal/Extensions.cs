@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 #nullable enable
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
     internal static class Extensions
     {

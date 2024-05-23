@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authentication;
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
 	/// <summary>
 	/// Handles authentication of SASTokens

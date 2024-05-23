@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
-using Authentication.SASToken;
+using mcdaniel.ws.AspNetCore.Authentication.SASToken;
 
 namespace Microsoft.AspNetCore.Builder
 {

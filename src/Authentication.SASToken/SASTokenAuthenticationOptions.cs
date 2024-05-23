@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
 	/// <summary>
 	/// Options to configure SASToken Authentication

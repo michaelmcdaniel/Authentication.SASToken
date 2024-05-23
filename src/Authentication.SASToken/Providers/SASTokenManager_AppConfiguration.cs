@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Authentication.SASToken.Providers
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 {
 	/// <summary>
 	/// SATTokenKeyStore that gets SASTokenKeys from App Configuration

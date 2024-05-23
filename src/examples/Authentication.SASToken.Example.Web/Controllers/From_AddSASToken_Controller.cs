@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Authentication.SASToken.Example.Web.Controllers
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Example.Web.Controllers
 {
     [Route("api/from-AddSASToken")]
     [ApiController]

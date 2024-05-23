@@ -4,9 +4,9 @@ Before:
 using Microsoft.AspNetCore.Authentication;
 After:
 using Authentication;
-using Authentication.SASToken;
-using Authentication.SASToken;
-using Authentication.SASToken.Authentication;
+using mcdaniel.ws.AspNetCore.Authentication.SASToken;
+using mcdaniel.ws.AspNetCore.Authentication.SASToken;
+using mcdaniel.ws.AspNetCore.Authentication.SASToken.Authentication;
 using Microsoft.AspNetCore.Authentication;
 */
 using Microsoft.AspNetCore.Authentication;
@@ -15,7 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
     /// <summary>
     /// ForbiddenContext for response.

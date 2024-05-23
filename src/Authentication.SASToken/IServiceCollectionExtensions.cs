@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
-using Authentication.SASToken;
-using Authentication.SASToken.Providers;
+using mcdaniel.ws.AspNetCore.Authentication.SASToken;
+using mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers;
 using System;
 using System.Collections.Generic;
 using System.Text;

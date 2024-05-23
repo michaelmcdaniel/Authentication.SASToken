@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using System.Linq;
 using System;
 
-namespace Authentication.SASToken.Generator
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Generator
 {
     public class Program
     {

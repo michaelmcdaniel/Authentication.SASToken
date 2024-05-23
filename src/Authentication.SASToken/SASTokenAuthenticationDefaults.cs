@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http;
 
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
     /// <summary>
     /// SASToken Defaults

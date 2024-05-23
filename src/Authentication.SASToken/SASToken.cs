@@ -4,7 +4,7 @@ using System.Text;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.WebUtilities;
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
     /// <summary>
     /// A token that is used to authenticate to an endpoint

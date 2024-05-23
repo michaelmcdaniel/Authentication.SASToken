@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 #nullable enable
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
     /// <summary>
     /// Class that Validates and Creates SASTokens

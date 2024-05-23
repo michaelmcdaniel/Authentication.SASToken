@@ -13,7 +13,7 @@ using System.Reflection.PortableExecutable;
 using Newtonsoft.Json.Linq;
 using System.IO.Packaging;
 
-namespace Authentication.SASToken.Tests
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Tests
 {
     [TestClass]
     public class AuthenticationTests

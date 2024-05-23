@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 
 
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
     /// <summary>
     /// Authentication Context for SASTokens

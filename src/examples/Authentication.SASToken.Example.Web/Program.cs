@@ -1,4 +1,4 @@
-namespace Authentication.SASToken.Example.Web
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Example.Web
 {
     public class Program
     {

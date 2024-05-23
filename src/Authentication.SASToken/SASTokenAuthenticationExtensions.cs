@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    using Authentication.SASToken;
+    using mcdaniel.ws.AspNetCore.Authentication.SASToken;
 
 	/// <summary>
 	/// Extensions for SASTokens

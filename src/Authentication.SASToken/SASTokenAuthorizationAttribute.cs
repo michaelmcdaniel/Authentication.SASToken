@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
-using Authentication.SASToken;
+using mcdaniel.ws.AspNetCore.Authentication.SASToken;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
     /// <summary>
     /// Attribute to apply on Controller Classes or Methods to check for Valid SASTokens

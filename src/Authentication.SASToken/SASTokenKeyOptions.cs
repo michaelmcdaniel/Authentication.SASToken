@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 #nullable enable
 
-namespace Authentication.SASToken
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
 	/// <summary>
 	/// Default Options for SASTokenKeys

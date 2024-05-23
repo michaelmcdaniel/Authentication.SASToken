@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 #pragma warning disable CS1591
-namespace Authentication.SASToken.JsonConverters
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.JsonConverters
 {
 	public class TimeSpanConverter : JsonConverter<TimeSpan>
 	{

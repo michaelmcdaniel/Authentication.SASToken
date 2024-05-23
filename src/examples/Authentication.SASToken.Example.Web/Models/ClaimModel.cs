@@ -1,4 +1,4 @@
-﻿namespace Authentication.SASToken.Example.Web.Models
+﻿namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Example.Web.Models
 {
     public class ClaimModel
     {

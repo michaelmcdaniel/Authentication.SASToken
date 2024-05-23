@@ -1,8 +1,8 @@
-using Authentication.SASToken.Example.Web.Models;
+using mcdaniel.ws.AspNetCore.Authentication.SASToken.Example.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
-namespace Authentication.SASToken.Example.Web.Controllers
+namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Example.Web.Controllers
 {
     public class HomeController(ILogger<HomeController> _logger, ISASTokenKeyStore _tokenStore) : Controller
     {

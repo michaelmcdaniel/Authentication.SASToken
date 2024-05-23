@@ -29,16 +29,18 @@ Path validation supports a wildcard character of an asterisk **\***. Single aste
 **url request:** /segment1/segment2/segment3
 
 **matching SASTokenKey.Uri** 
-**/segment1/segment2/segment3** - exact path match only
-**/segment1/segment2/segment\*** - match root segment '/segment1/segment2/' and 3rd segment must starts wit 'segment' *(only 3 segments allowed)*
-**/seg\*\*** - match any path starting with 'segm' *('/seg/' included)*
-**/\*\***  - match anything under root '/'
-**/\*\*/segment3**  - match all paths that end with 'segment3'
-**/\*/\*/segment3** - match any 2 segment names and ends with 'segment3' *(only 3 segments allowed)*
-**/segment1/\*\*** - match any endpoints under '/segment1' - *(at least 1 non-zero length sub-segment is required)*
-**/segment1/\*/\*** - match root '/segment1' and require 2 non-zero length sub-segments,  *(only 3 segments allowed)*
-**/segment1/segment2/\*** - match root segments '/segment1/segment2/' with any non-zero length 3rd segment *(only 3 segments allowed)*
-**/s\*/\*2/\*me\*** - first segment must start with 's', second segment must end with '2', and third segment must contain the word 'me' *(only 3 segments allowed)*
+
+**/segment1/segment2/segment3** - exact path match only\
+**/segment1/segment2/segment\*** - match root segment '/segment1/segment2/' and 3rd segment must starts wit 'segment' *(only 3 segments allowed)*\
+**/seg\*\*** - match any path starting with 'segm' *('/seg/' included)*\
+**/\*\***  - match anything under root '/'\
+**/\*\*/segment3**  - match all paths that end with 'segment3'\
+**/\*/\*/segment3** - match any 2 segment names and ends with 'segment3' *(only 3 segments allowed)*\
+**/segment1/\*\*** - match any endpoints under '/segment1' - *(at least 1 non-zero length sub-segment is required)*\
+**/segment1/\*/\*** - match root '/segment1' and require 2 non-zero length sub-segments,  *(only 3 segments allowed)*\
+**/segment1/segment2/\*** - match root segments '/segment1/segment2/' with any non-zero length 3rd segment *(only 3 segments allowed)*\
+**/s\*/\*2/\*me\*** - first segment must start with 's', second segment must end with '2', and third segment must contain the word 'me' *(only 3 
+segments allowed)*
 
 
 # Configuration

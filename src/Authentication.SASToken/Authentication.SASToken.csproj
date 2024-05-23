@@ -13,6 +13,7 @@
 		<PackageTags>SASToken;Authentication;SharedAccessSignature</PackageTags>
 		<PackageId>mcdaniel.ws.AspNetCore.Authentication.SASToken</PackageId>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 	</PropertyGroup>
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />

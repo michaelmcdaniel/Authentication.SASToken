@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging.Debug;
 using Microsoft.Extensions.Logging;
 using System.Reflection.PortableExecutable;
 using Newtonsoft.Json.Linq;
+using System.IO.Packaging;
 
 namespace Authentication.SASToken.Tests
 {
@@ -31,7 +32,7 @@ namespace Authentication.SASToken.Tests
             services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(sp =>
             {
                 return new ConfigurationBuilder()
-                .SetBasePath(System.IO.Directory.GetCurrentDirectory())
+                .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
                 .AddJsonFile("appSettings.json")
                 .Build();
             });
@@ -106,7 +107,7 @@ namespace Authentication.SASToken.Tests
             services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(sp =>
             {
                 return new ConfigurationBuilder()
-                .SetBasePath(System.IO.Directory.GetCurrentDirectory())
+                .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
                 .AddJsonFile("appSettings.json")
                 .Build();
             });
@@ -171,7 +172,7 @@ namespace Authentication.SASToken.Tests
             services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(sp =>
             {
                 return new ConfigurationBuilder()
-                .SetBasePath(System.IO.Directory.GetCurrentDirectory())
+                .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
                 .AddJsonFile("appSettings.json")
                 .Build();
             });
@@ -237,8 +238,8 @@ namespace Authentication.SASToken.Tests
             services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(sp =>
             {
                 return new ConfigurationBuilder()
-                .SetBasePath(System.IO.Directory.GetCurrentDirectory())
-                .AddJsonFile("appSettings.json")
+                .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
+				.AddJsonFile("appSettings.json")
                 .Build();
             });
             services.AddSASTokenStore_AppConfiguration();
@@ -312,7 +313,7 @@ namespace Authentication.SASToken.Tests
             services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(sp =>
             {
                 return new ConfigurationBuilder()
-                .SetBasePath(System.IO.Directory.GetCurrentDirectory())
+                .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
                 .AddJsonFile("appSettings.json")
                 .Build();
             });

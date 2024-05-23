@@ -315,7 +315,7 @@ namespace Authentication.SASToken.Tests
             services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(sp =>
             {
                 return new ConfigurationBuilder()
-                .SetBasePath(System.IO.Directory.GetCurrentDirectory())
+                .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
                 .AddJsonFile("appSettings.json")
                 .Build();
             });

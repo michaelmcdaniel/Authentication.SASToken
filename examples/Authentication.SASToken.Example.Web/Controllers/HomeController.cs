@@ -13,9 +13,9 @@ namespace Authentication.SASToken.Example.Web.Controllers
         }
 
         [ResponseCache(Duration = 0, NoStore = true)]
-        public async Task<IActionResult> Token([FromQuery]string id)
+        public async Task<IActionResult> Token([FromQuery]string id, [FromQuery]string role)
         {
-            var token = (await _tokenStore.GetAsync(id))?.ToToken();
+            var token = (await _tokenStore.GetAsync(id))?.ToToken((role??"").Split(','));
             if (token is null)
             {
                 _logger.LogWarning($"TokenSource not found for id: {id}");

@@ -155,7 +155,7 @@ namespace Authentication.SASToken
             var expRHS = new DateTime(token.Expiration.Year, token.Expiration.Month, token.Expiration.Day, token.Expiration.Hour, token.Expiration.Minute, token.Expiration.Second);
             return
                 Id == token.Id &&
-				(Roles?.Equals(token.Roles, StringComparison.OrdinalIgnoreCase)??false) &&
+				(Roles?.Equals(token.Roles, StringComparison.OrdinalIgnoreCase)?? string.IsNullOrWhiteSpace(token.Roles)) &&
 				Signature == token.Signature &&
 				Version == token.Version &&
                 expLHS == expRHS;

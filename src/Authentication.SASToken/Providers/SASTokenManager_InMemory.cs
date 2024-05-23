@@ -27,7 +27,7 @@ namespace Authentication.SASToken.Providers
 
         public Task<IEnumerable<SASTokenKey>> GetAllAsync()
         {
-            return Task.FromResult((IEnumerable<SASTokenKey>)_tokens.Values);
+			return Task.FromResult((IEnumerable<SASTokenKey>)_tokens.Values.Where(tk => tk is not null).Select(tk => tk.Value!).ToArray());
         }
 
         public Task<SASTokenKey?> SaveAsync(SASTokenKey token)

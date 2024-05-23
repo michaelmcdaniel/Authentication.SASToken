@@ -49,7 +49,7 @@ namespace Authentication.SASToken.Providers
                     Secret = secret,
                     Uri = uri
                 };
-                _tokens[tokenKey.Id.ToString()] = tokenKey;
+                _tokens[tokenKey.Id] = tokenKey;
                 hasDefaultTokenKey = true;
             }
             foreach(var tk in children)

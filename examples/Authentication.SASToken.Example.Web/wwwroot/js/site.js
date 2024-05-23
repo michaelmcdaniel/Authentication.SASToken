@@ -15,10 +15,13 @@ window.page.vue = {
 	computed: { },
 	watch: { },
 	methods: {
-		getToken: function(ts) {
+		copy: function(data) {
+			navigator.clipboard.writeText(data);
+		},
+		getToken: function(ts, role) {
 			var me = this, id = ts.Id;
 
-			fetch('/home/token?id='+id, {
+			fetch('/home/token?id='+id+'&role='+(role||''), {
 					method: "GET",
 					cache: "no-cache",
 					headers: { "Content-Type": "application/json" },
@@ -41,7 +44,7 @@ window.page.vue = {
 		},
 		getApiClaims: function(qs) {
 			var me = this;
-			fetch('/api/claims?'+qs, {
+			fetch('/api/from-AddSASToken/claims?'+qs, {
 					method: "GET",
 					cache: "no-cache",
 					headers: { "Content-Type": "application/json" },

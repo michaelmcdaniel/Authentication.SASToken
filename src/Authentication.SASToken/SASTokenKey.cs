@@ -174,7 +174,7 @@ namespace Authentication.SASToken
 
 			System.Security.Cryptography.HMACSHA256 tokenizer = new System.Security.Cryptography.HMACSHA256(Convert.FromBase64String(Secret));
 			DateTimeOffset expires = expiration ?? Expiration.ToMax();
-			string roleString = string.Join(',', roles);
+			string roleString = string.Join(',', roles.Where(r=>!string.IsNullOrWhiteSpace(r)));
 
 			return new SASToken(
 				Id,
@@ -221,9 +221,9 @@ namespace Authentication.SASToken
 		/// <returns>true if the signatures match and not expired</returns>
 		public bool Validate(SASToken token, Uri endpoint, IEnumerable<string>? roles = null, Microsoft.Extensions.Logging.ILogger? logger = null)
 		{
-			if (roles is not null)
+			if (roles is not null && roles.Count() > 0)
 			{
-				if (token.Roles?.Length == 0 && roles.Count() > 0)
+				if (token.Roles?.Length == 0)
 				{
 					if (logger != null) logger.LogDebug("Token validation failed {0}: no required roles given. required: {1}", token, string.Join(",", roles));
 					return false;

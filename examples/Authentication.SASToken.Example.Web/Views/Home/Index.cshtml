@@ -3,17 +3,22 @@
     ViewData["Title"] = "Example SASToken Authentication";
 }
 <div v-cloak>
-	<div class="token-source" v-for="ts in tokenKeys">
-        <div><label>Id: </label>{{ts.Id}}</div>
-        <div><label>Name: </label>{{ts.Name}}</div>
-        <div><label>Version: </label>{{ts.Expiration}}</div>
-        <div><label>Url: </label>{{ts.Uri}}</div>
-        <div><label>Secret: </label>{{ts.Secret}}</div>
-        <div><label>Expiration: </label>{{ts.Expiration}}</div>
-        <button @@click="getToken(ts)">Generate Token</button>
-        <div v-if="ts.token">
-            <div><label>Token: </label>{{ts.token}}</div>
-            <button @@click="getApiClaimsQS(ts.token)">Try It</button>
+	<div class="sastoken-key" v-for="ts in tokenKeys">
+		<div class="title"><div class="url">{{ts.Uri}}</div><div title="SASToken.Id" class="id">{{ts.Id}}</div></div>
+		<div v-if="ts.Description" title="SASToken.Description" class="description">{{ts.Description}}</div>
+		<div class="signature"><label title="SASToken.Version">{{ts.Version}}</label>: <span title="SASToken.Secret">{{ts.Secret}}</span></div>
+		<div><button @@click="getToken(ts)">Generate Token<span v-if="ts.Expiration"> - {{ts.Expiration}}</span></button></div>
+		<div><button @@click="getToken(ts, 'Admin')">Generate Admin Token<span v-if="ts.Expiration"> - {{ts.Expiration}}</span></button></div>
+		<div v-if="ts.token != null && ts.token.length > 0">
+			<div class="token" @@click="copy(ts.token)">{{ts.token}}</div>
+			<b>Try it: </b><br/>
+			<a :href="'/api/from-AddSASToken/claims?'+ts.token" title="try it out" target="_blank">/api/from-AddSASToken/claims</a><br />
+			<a :href="'/api/attribute-protected/claims?'+ts.token" title="try it out" target="_blank">/api/attribute-protected/claims</a><br />
+			<br/>
+			<i>These will fail with 403 if no Admin role.</i><br/>
+			<a :href="'/api/from-AddSASToken/admin-claims?'+ts.token" title="try it out" target="_blank">/api/from-AddSASToken/admin-claims</a><br />
+			<a :href="'/api/attribute-protected/admin-claims?'+ts.token" title="try it out" target="_blank">/api/attribute-protected/admin-claims</a><br />
+			<!--button @@click="getApiClaimsQS(ts.token)">Try It</button-->
         </div>
     </div>
 </div>

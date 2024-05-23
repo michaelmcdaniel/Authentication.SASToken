@@ -1,5 +1,5 @@
 *[v-cloak] { display:none; }
-
+* { box-sizing: border-box }
 html {
   font-size: 14px;
 }
@@ -17,8 +17,41 @@ html {
 html {
   position: relative;
   min-height: 100%;
+  font: normal 14px arial; 
 }
 
 body {
   margin-bottom: 60px;
 }
+
+.sastoken-key {
+	margin-left: 10px; 
+	margin-right: 10px;
+	border-left: 4px solid #258cfb;
+	padding: 10px 10px;
+	display: flex;
+	flex-direction: column;
+	width: 99%;
+	max-width: 1024px;
+}
+
+.sastoken-key .title {
+	font-size: 1.4em;
+	display:flex;
+	width: 100%; 
+	flex-direction: row;
+	justify-content:space-between;
+	border-bottom: 1px solid #ccc;
+}
+
+.sastoken-key .id {
+	text-align:right;
+}
+.sastoken-key .description {
+	color:#555; margin: 5px 0px 10px 0px; 
+}
+
+.sastoken-key button { display: inline-block; cursor: pointer; margin-top: 10px; margin-bottom: 5px; }
+.sastoken-key .token { font-size: 0.86em; margin: 10px 0px 10px 5px; cursor: pointer; word-break:break-all; word-wrap:anywhere; }
+.sastoken-key .signature label { font-weight: bold; cursor: text; }
+.sastoken-key a { margin-right: 10px; }

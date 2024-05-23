@@ -15,7 +15,7 @@ namespace Authentication.SASToken
 {
     public class SASTokenAuthenticationHandler<T> : AuthenticationHandler<T> where T : SASTokenAuthenticationOptions, new()
     {
-
+		ILogger<SASTokenAuthenticationHandler<T>> _logger = null;
         /// <summary>
         /// Initializes a new instance of <see cref="CookieAuthenticationHandler"/>.
         /// </summary>
@@ -26,6 +26,10 @@ namespace Authentication.SASToken
         public SASTokenAuthenticationHandler(IOptionsMonitor<T> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
             : base(options, logger, encoder, clock)
         {
+			if (logger != null)
+			{
+				_logger = logger.CreateLogger<SASTokenAuthenticationHandler<T>>();
+			}
         }
 
 
@@ -55,30 +59,36 @@ namespace Authentication.SASToken
             // If no authorization header found, nothing to process further
             if (!token.HasValue || token.Value.IsEmpty)
             {
-                return AuthenticateResult.NoResult();
+				_logger.LogDebug("No token - AuthenticateResult.NoResult()");
+				return AuthenticateResult.NoResult();
             }
 
 
             ISASTokenKeyResolver store = await Options.TokenStoreResolverAsync(Context.RequestServices);
             if (store is null)
             {
-                return AuthenticateResult.Fail("Token store not found");
+				_logger.LogError("ISASTokenKeyResolver not found - AuthenticateResult.Fail()");
+				return AuthenticateResult.Fail("SASTokenKeyResolver not found");
             }
 
             var tokenKey = await store.GetAsync(token.Value);
             if (tokenKey is null)
             {
-                return AuthenticateResult.Fail("Token source not found");
+				_logger.LogInformation("SASTokenKey not found - AuthenticateResult.Fail()");
+				return AuthenticateResult.Fail("SASTokenKey not found");
             }
 
             var authenticatingContext = new SASTokenAuthenticatingContext(Context, Scheme, Options);
             await Events.Authenticating(authenticatingContext);
             if (!tokenKey.Value.Validate(token.Value, Request, null, Logger))
             {
-                return AuthenticateResult.Fail("Invalid SASToken");
+				_logger.LogDebug("SASToken validation failed - AuthenticateResult.Fail()");
+				return AuthenticateResult.Fail("Invalid SASToken");
             }
+			_logger.LogDebug($"SASToken validation succeeded {0}", token.Value.Id);
+
 			var claims = new List<Claim>(new[] {
-                    new Claim(ClaimTypes.NameIdentifier, token.Value.Id.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, token.Value.Id),
                     new Claim(ClaimTypes.Expiration, token.Value.Expiration.ToUnixTimeSeconds().ToString()),
                     new Claim(ClaimTypes.Uri, tokenKey.Value.Uri.ToString()),
                     new Claim(ClaimTypes.Version, token.Value.Version)
@@ -88,8 +98,16 @@ namespace Authentication.SASToken
 			var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
             var authenticatedContext = new SASTokenAuthenticatedContext(Context, Scheme, Options, principal);
+			authenticatedContext.Properties.AllowRefresh = false;
+			authenticatedContext.Properties.IsPersistent = false;
+			authenticatedContext.Properties.ExpiresUtc = token.Value.Expiration;
+
             await Events.Authenticated(authenticatedContext);
             var tokenValidatedContext = new SASTokenValidateTokenContext(Context, Scheme, Options);
+			tokenValidatedContext.Properties.AllowRefresh = false;
+			tokenValidatedContext.Properties.ExpiresUtc = token.Value.Expiration;
+			tokenValidatedContext.Properties.IsPersistent = false;
+
             return AuthenticateResult.Success(new AuthenticationTicket(principal, tokenValidatedContext.Properties, Scheme.Name));
         }
 

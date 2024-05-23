@@ -16,7 +16,7 @@ namespace Authentication.SASToken.Generator
             sc.AddSingleton<IConfiguration>(
                 new ConfigurationBuilder()
                     .SetBasePath(System.IO.Directory.GetCurrentDirectory())
-                    .AddJsonFile("appSettings.json", true)
+                    .AddJsonFile("appsettings.json", true)
                     .AddUserSecrets(System.Reflection.Assembly.GetEntryAssembly()!)
                     .Build()
             );

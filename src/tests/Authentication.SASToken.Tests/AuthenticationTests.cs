@@ -33,7 +33,7 @@ namespace Authentication.SASToken.Tests
             {
                 return new ConfigurationBuilder()
                 .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
-                .AddJsonFile("appSettings.json")
+                .AddJsonFile("appsettings.json")
                 .Build();
             });
             services.AddSASTokenStore_AppConfiguration();
@@ -108,7 +108,7 @@ namespace Authentication.SASToken.Tests
             {
                 return new ConfigurationBuilder()
                 .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
-                .AddJsonFile("appSettings.json")
+                .AddJsonFile("appsettings.json")
                 .Build();
             });
             services.AddSASTokenStore_AppConfiguration();
@@ -173,7 +173,7 @@ namespace Authentication.SASToken.Tests
             {
                 return new ConfigurationBuilder()
                 .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
-                .AddJsonFile("appSettings.json")
+                .AddJsonFile("appsettings.json")
                 .Build();
             });
             services.AddSASTokenStore_AppConfiguration();
@@ -239,7 +239,7 @@ namespace Authentication.SASToken.Tests
             {
                 return new ConfigurationBuilder()
                 .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
-				.AddJsonFile("appSettings.json")
+				.AddJsonFile("appsettings.json")
                 .Build();
             });
             services.AddSASTokenStore_AppConfiguration();
@@ -314,7 +314,7 @@ namespace Authentication.SASToken.Tests
             {
                 return new ConfigurationBuilder()
                 .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()!.Location)!)
-                .AddJsonFile("appSettings.json")
+                .AddJsonFile("appsettings.json")
                 .Build();
             });
             services.AddSASTokenStore_AppConfiguration();

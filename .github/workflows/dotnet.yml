@@ -23,12 +23,12 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore -c Release
     - name: Test
       run: dotnet test --no-restore --verbosity minimal
     #- name: Pack nugets
     #  run: dotnet pack ./src/Authentication.SASToken/Authentication.SASToken.csproj -c Release --no-build
     - name: Push to NuGet
-      run: dotnet nuget push "*.nupkg" -k ${NUGET_AUTH_TOKEN} -s https://api.nuget.org/v3/index.json
+      run: dotnet nuget push "./src/Authentication.SASToken/Authentication.SASToken/bin/Release/*.nupkg" -k ${NUGET_AUTH_TOKEN} -s https://api.nuget.org/v3/index.json
       env:
         NUGET_AUTH_TOKEN: ${{secrets.NUGET_API_KEY}}

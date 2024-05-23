@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Authentication.SASToken.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -45,7 +44,6 @@ namespace Authentication.SASToken.Tests
                     }
                 ).AddSASToken(options =>
                 {
-                    //options.TokenStoreResolverAsync = (sp) => Task.FromResult(sp.GetService<ITokenSourceStore>());
                     options.Events = new SASTokenAuthenticationEvents()
                     {
                         OnValidateToken = (ctx) => { return Task.CompletedTask; },
@@ -56,9 +54,9 @@ namespace Authentication.SASToken.Tests
 
 
             var sp = services.BuildServiceProvider();
-            var appConfig = sp.GetService<ITokenSourceStore>()!;
+            var appConfig = sp.GetService<ISASTokenKeyStore>()!;
 
-            var testSource = appConfig.GetAsync("test").Result;
+            var testSource = appConfig.GetAsync("167b123e-0816-4943-b31f-41c29c14d1b2").Result;
             Assert.IsNotNull(testSource);
             var test = testSource.Value;
 
@@ -87,7 +85,7 @@ namespace Authentication.SASToken.Tests
             var result = httpContext.AuthenticateAsync().Result;
             Assert.IsTrue(result.Succeeded);
 
-            var tokenStore = sp.GetService<ITokenSourceStore>();
+            var tokenStore = sp.GetService<ISASTokenKeyStore>();
             var loggerFactory = sp.GetService<ILoggerFactory>()!;
             EndpointValidator ev = new EndpointValidator(tokenStore, loggerFactory.CreateLogger<EndpointValidator>());
             Assert.IsTrue(ev.IsValidAsync(token, httpContext.Request).Result);
@@ -132,9 +130,9 @@ namespace Authentication.SASToken.Tests
 
 
             var sp = services.BuildServiceProvider();
-            var appConfig = sp.GetService<ITokenSourceStore>()!;
+            var appConfig = sp.GetService<ISASTokenKeyStore>()!;
 
-            var testSource = appConfig.GetAsync("test").Result;
+            var testSource = appConfig.GetAsync("167b123e-0816-4943-b31f-41c29c14d1b2").Result;
             Assert.IsNotNull(testSource);
             var test = testSource.Value;
 
@@ -197,9 +195,9 @@ namespace Authentication.SASToken.Tests
 
 
             var sp = services.BuildServiceProvider();
-            var appConfig = sp.GetService<ITokenSourceStore>()!;
+            var appConfig = sp.GetService<ISASTokenKeyStore>()!;
 
-            var testSource = appConfig.GetAsync("test").Result;
+            var testSource = appConfig.GetAsync("167b123e-0816-4943-b31f-41c29c14d1b2").Result;
             Assert.IsNotNull(testSource);
             var test = testSource.Value;
 
@@ -263,18 +261,18 @@ namespace Authentication.SASToken.Tests
 
 
             var sp = services.BuildServiceProvider();
-            var appConfig = sp.GetService<ITokenSourceStore>()!;
+            var appConfig = sp.GetService<ISASTokenKeyStore>()!;
 
-            var testSource = appConfig.GetAsync("test").Result;
+            var testSource = appConfig.GetAsync("167b123e-0816-4943-b31f-41c29c14d1b2").Result;
             Assert.IsNotNull(testSource);
             var test = testSource.Value;
 
-            TokenSource badSource = new TokenSource()
+            SASTokenKey badSource = new SASTokenKey()
             {
                 Id = test.Id,
                 Expiration = TimeSpan.FromMinutes(5),
-                Name = test.Name,
-                Secret = TokenSource.GenerateSecret(),
+                Description = test.Description,
+                Secret = SASTokenKey.GenerateSecret(),
                 Signature = test.Signature,
                 Uri = test.Uri,
                 Version = test.Version
@@ -338,18 +336,18 @@ namespace Authentication.SASToken.Tests
 
 
             var sp = services.BuildServiceProvider();
-            var appConfig = sp.GetService<ITokenSourceStore>()!;
+            var appConfig = sp.GetService<ISASTokenKeyStore>()!;
 
-            var testSource = appConfig.GetAsync("test").Result;
+            var testSource = appConfig.GetAsync("167b123e-0816-4943-b31f-41c29c14d1b2").Result;
             Assert.IsNotNull(testSource);
             var test = testSource.Value;
 
-            TokenSource badSource = new TokenSource()
+            SASTokenKey badSource = new SASTokenKey()
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString(),
                 Expiration = TimeSpan.FromMinutes(5),
-                Name = test.Name,
-                Secret = TokenSource.GenerateSecret(),
+                Description = test.Description,
+                Secret = SASTokenKey.GenerateSecret(),
                 Signature = test.Signature,
                 Uri = test.Uri,
                 Version = test.Version
@@ -380,7 +378,7 @@ namespace Authentication.SASToken.Tests
             var result = httpContext.AuthenticateAsync().Result;
             Assert.IsFalse(result.Succeeded);
 
-            var tokenStore = sp.GetService<ITokenSourceStore>();
+            var tokenStore = sp.GetService<ISASTokenKeyStore>();
             var loggerFactory = sp.GetService<ILoggerFactory>()!;
             EndpointValidator ev = new EndpointValidator(tokenStore, loggerFactory.CreateLogger<EndpointValidator>());
             Assert.IsFalse(ev.IsValidAsync(token, httpContext.Request).Result);

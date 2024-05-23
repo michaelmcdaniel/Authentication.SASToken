@@ -7,9 +7,9 @@ if (!window.page.defaults) window.page.defaults = {};
 window.page.vue = {
 	data: function() { return Object.assign({ apiClaims:[] }, window.page.model); },
 	mounted: function() { 
-		for(var i = 0; i < this.tokenSources.length; i++)
+		for(var i = 0; i < this.tokenKeys.length; i++)
 		{
-			this.tokenSources[i].token = null;
+			this.tokenKeys[i].token = null;
 		}
 	},
 	computed: { },
@@ -26,11 +26,11 @@ window.page.vue = {
 					referrer: "client"
 				}).then(r=>r.json()).then(d =>
 			{
-				for(var i = 0; i < me.tokenSources.length; i++)
+				for(var i = 0; i < me.tokenKeys.length; i++)
 				{
-					if (me.tokenSources[i].Id == id) 
+					if (me.tokenKeys[i].Id == id) 
 					{
-						me.tokenSources[i].token = d.token;
+						me.tokenKeys[i].token = d.token;
 						break;
 					}
 				}

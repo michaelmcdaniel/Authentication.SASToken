@@ -29,10 +29,9 @@ namespace Authentication.SASToken
             if (request is null) return SASToken.Empty;
 			Microsoft.Extensions.Primitives.StringValues sv;
 			SASToken retVal;
-			Uri endpoint = new Uri(request.GetDisplayUrl());
-			if (!request.Headers.TryGetValue("Authorization", out sv) || !SASToken.TryParse(sv, endpoint, out retVal))
+			if (!request.Headers.TryGetValue("Authorization", out sv) || !SASToken.TryParse(sv, out retVal))
 			{
-				retVal = new SASToken(endpoint, request.QueryString);
+				retVal = new SASToken(request.QueryString);
 			}
 			return retVal;
 		}

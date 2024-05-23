@@ -4,18 +4,18 @@ using System.Diagnostics;
 
 namespace Authentication.SASToken.Example.Web.Controllers
 {
-    public class HomeController(ILogger<HomeController> _logger, ITokenSourceStore _tokenSourceStore) : Controller
+    public class HomeController(ILogger<HomeController> _logger, ISASTokenKeyStore _tokenStore) : Controller
     {
 
         public async Task<IActionResult> Index()
         {
-            return View(await _tokenSourceStore.GetAllAsync());
+            return View(await _tokenStore.GetAllAsync());
         }
 
         [ResponseCache(Duration = 0, NoStore = true)]
-        public async Task<IActionResult> Token([FromQuery]Guid id)
+        public async Task<IActionResult> Token([FromQuery]string id)
         {
-            var token = (await _tokenSourceStore.GetAsync(id))?.ToToken();
+            var token = (await _tokenStore.GetAsync(id))?.ToToken();
             if (token is null)
             {
                 _logger.LogWarning($"TokenSource not found for id: {id}");

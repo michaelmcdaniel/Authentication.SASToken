@@ -7,28 +7,28 @@ namespace Authentication.SASToken
 {
 	public class EndpointValidator
 	{
-		private readonly ITokenSourceStore _store;
+		private readonly ISASTokenKeyResolver _store;
 		private readonly ILogger<EndpointValidator> _logger;
-		public EndpointValidator(ITokenSourceStore store, ILogger<EndpointValidator> logger)
+		public EndpointValidator(ISASTokenKeyResolver store, ILogger<EndpointValidator> logger)
 		{
 			_store = store;
 			_logger = logger;
 		}
 
-		public async Task<bool> IsValidAsync(SASToken token, Uri endpoint = null)
+		public async Task<bool> IsValidAsync(SASToken token, Uri endpoint = null, IEnumerable<string> roles = null)
 		{
-			TokenSource? tokenSource = await _store.GetAsync(token);
-			if (tokenSource == null)
+			SASTokenKey? tokenKey = await _store.GetAsync(token);
+			if (tokenKey == null)
 			{
 				_logger.LogDebug("Token validation failed {0}: token source not found", token);
 				return false;
 			}
-			return tokenSource.Value.Validate(token, endpoint, _logger);
+			return tokenKey.Value.Validate(token, endpoint, roles, _logger);
 		}
 
-		public async Task<bool> IsValidAsync(SASToken token, Microsoft.AspNetCore.Http.HttpRequest request)
+		public async Task<bool> IsValidAsync(SASToken token, Microsoft.AspNetCore.Http.HttpRequest request, IEnumerable<string> roles = null)
 		{
-			return await IsValidAsync(token, new Uri(request.GetDisplayUrl()));
+			return await IsValidAsync(token, new Uri(request.GetDisplayUrl()), roles);
 		}
 	}
 }

@@ -6,18 +6,18 @@ namespace Microsoft.AspNetCore.Builder
 {
     public static class IApplicationBuilderExtensions
     {
-        /// <summary>
-        /// Initializes In-Memory TokenSource Store
-        /// </summary>
-        /// <param name="app"></param>
-        /// <param name="initialize">Add in-memory TokenSources</param>
-        /// <returns></returns>
-        public static IApplicationBuilder UseSASTokenStore_InMemory(this IApplicationBuilder app, Action<IServiceProvider, ITokenSourceStore> initialize)
+		/// <summary>
+		/// Initializes In-Memory SASTokenKey Store
+		/// </summary>
+		/// <param name="app"></param>
+		/// <param name="initialize">Add in-memory SASTokenKeys</param>
+		/// <returns></returns>
+		public static IApplicationBuilder UseSASTokenStore_InMemory(this IApplicationBuilder app, Action<IServiceProvider, ISASTokenKeyStore> initialize)
         {
-            var tokenStoreStore = app.ApplicationServices.GetService<ITokenSourceStore>();
+            var tokenStore = app.ApplicationServices.GetService<ISASTokenKeyStore>();
             if (initialize != null)
             {
-                initialize(app.ApplicationServices, tokenStoreStore);
+                initialize(app.ApplicationServices, tokenStore);
             }
             return app;
         }

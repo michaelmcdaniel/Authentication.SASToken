@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Options;
 
-namespace Authentication.SASToken.Authentication
+namespace Authentication.SASToken
 {
     /// <summary>
     /// PostConfigureSASTokenAuthenticationOptions
     /// </summary>
 	public class PostConfigureSASTokenAuthenticationOptions : IPostConfigureOptions<SASTokenAuthenticationOptions>
-	{
+    {
         /// <summary>
         /// Configure SASTokenAuthenticationOptions 
         /// </summary>
@@ -17,11 +17,11 @@ namespace Authentication.SASToken.Authentication
         /// <param name="options"></param>
         /// <exception cref="ArgumentNullException"></exception>
 		public void PostConfigure(string name, SASTokenAuthenticationOptions options)
-		{
-			if (name is null)
-			{
-				throw new ArgumentNullException(nameof(name));
-			}
-		}
-	}
+        {
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+        }
+    }
 }

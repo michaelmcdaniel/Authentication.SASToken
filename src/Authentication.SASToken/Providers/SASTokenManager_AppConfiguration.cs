@@ -1,118 +1,128 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Authentication.SASToken.Providers
 {
-    public class SASTokenManager_AppConfiguration : ITokenSourceStore
+    public class SASTokenManager_AppConfiguration : ISASTokenKeyStore
     {
-        private List<TokenSource> _tokenSources = new List<TokenSource>();
-        private Dictionary<string, TokenSource?> _tokenSourceLookup = new Dictionary<string, TokenSource?>(System.StringComparer.InvariantCultureIgnoreCase);
+        private Dictionary<string, SASTokenKey?> _tokens = new Dictionary<string, SASTokenKey?>(System.StringComparer.InvariantCultureIgnoreCase);
+
         public SASTokenManager_AppConfiguration(IOptions<SASTokenManager_AppConfiguration.Options> options, IConfiguration config)
         {
-            var re = options.Value.SASTokenNameMatch;
-            foreach (var sections in config.GetChildren())
+			Uri uri;
+            var settings = config.GetSection(options.Value.SectionName);
+            var children = settings.GetChildren().ToList();
+            var id = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Id)?.Value;
+            var desc = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Description)?.Value;
+            var path = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Path)?.Value;
+            var secret = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Secret)?.Value;
+            var version = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Version)?.Value;
+            var expiration = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Expiration)?.Value;
+            bool hasDefaultTokenKey = false;
+            if (!string.IsNullOrWhiteSpace(path) && Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri) && !string.IsNullOrWhiteSpace(secret))
             {
-                var match = re.Match(sections.Key);
-                if (match.Success)
+				if (string.IsNullOrWhiteSpace(version))
+				{
+					if (uri.IsAbsoluteUri && (uri.AbsolutePath == "/" || uri.AbsolutePath == "")) version = SASTokenKey.VERSION_HOST;
+					else if (uri.IsAbsoluteUri) version = SASTokenKey.VERSION_ABSOLUTE_URI;
+					else version = SASTokenKey.VERSION_RELATIVE_URI;
+				}
+
+				TimeSpan tsExpiration;
+                if (string.IsNullOrWhiteSpace(expiration) || !TimeSpan.TryParse(expiration, out tsExpiration)) tsExpiration = TimeSpan.MaxValue;
+                var tokenKey = new SASTokenKey()
                 {
-                    var children = sections.GetChildren().ToList();
-                    string id, path, secret, version, expiration;
-                    if (children.Count == 0)
-                    {
-                        // use the value as format
-                        var values = options.Value.SASTokenValueParser.Match(sections.Value);
-                        if (!values.Success)
-                        {
-                            throw new ApplicationException("Invalid format for SASToken Value.");
-                        }
-                        id = values.Groups["id"]?.Value;
-                        path = values.Groups["path"]?.Value;
-                        secret = values.Groups["secret"]?.Value;
-                        version = values.Groups["version"]?.Value;
-                        expiration = null;
-                    }
-                    else if (children.Count >= 3)
-                    {
-                        id = children.FirstOrDefault(c=>c.Key==options.Value.FieldName_Id)?.Value;
-                        path = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Path)?.Value;
-                        secret = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Secret)?.Value;
-                        version = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Version)?.Value;
-                        expiration = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Expiration)?.Value;
-                    }
-                    else
-                    {
-                        throw new ApplicationException("Invalid SASToken Configuration");
-                    }
-                    if (secret.StartsWith("{") && secret.EndsWith("}"))
-                    {
-                        secret = config.GetValue<string>(secret.Substring(1, secret.Length - 2));
-                    }
-                    Guid gid;
-                    if (!Guid.TryParse(id, out gid))
-                    {
-                        throw new ApplicationException("Invalid SASToken Id Guid Format");
-                    }
-                    if (string.IsNullOrWhiteSpace(version))
-                    {
-                        version = TokenSource.VERSION_ABSOLUTE_URI;
-                    }
+                    Expiration = tsExpiration,
+                    Id = id,
+                    Description = desc,
+                    Version = version,
+                    Secret = secret,
+                    Uri = uri
+                };
+                _tokens[tokenKey.Id.ToString()] = tokenKey;
+                hasDefaultTokenKey = true;
+            }
+            foreach(var tk in children)
+            {
+                if (hasDefaultTokenKey &&
+                    (
+                        tk.Key == options.Value.FieldName_Id ||
+                        tk.Key == options.Value.FieldName_Description ||
+                        tk.Key == options.Value.FieldName_Path ||
+                        tk.Key == options.Value.FieldName_Secret ||
+                        tk.Key == options.Value.FieldName_Version ||
+                        tk.Key == options.Value.FieldName_Expiration
+                    )) continue;
+
+                var fields = tk.GetChildren().ToList();
+				id = tk.Key;
+                var tempId = fields.FirstOrDefault(c => c.Key == options.Value.FieldName_Id)?.Value;
+				if (!string.IsNullOrEmpty(tempId)) id = tempId;
+                desc = fields.FirstOrDefault(c => c.Key == options.Value.FieldName_Description)?.Value;
+                path = fields.FirstOrDefault(c => c.Key == options.Value.FieldName_Path)?.Value;
+                secret = fields.FirstOrDefault(c => c.Key == options.Value.FieldName_Secret)?.Value;
+                version = fields.FirstOrDefault(c => c.Key == options.Value.FieldName_Version)?.Value;
+                expiration = fields.FirstOrDefault(c => c.Key == options.Value.FieldName_Expiration)?.Value;
+                if (!string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(path) && Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri) && !string.IsNullOrWhiteSpace(secret))
+                {
                     TimeSpan tsExpiration;
                     if (string.IsNullOrWhiteSpace(expiration) || !TimeSpan.TryParse(expiration, out tsExpiration)) tsExpiration = TimeSpan.MaxValue;
-                    var tokenSource = new TokenSource()
+                    if (string.IsNullOrWhiteSpace(version))
+                    {
+                        if (uri.IsAbsoluteUri && uri.AbsolutePath == "/") version = SASTokenKey.VERSION_HOST;
+                        else if (uri.IsAbsoluteUri) version = SASTokenKey.VERSION_ABSOLUTE_URI;
+                        else version = SASTokenKey.VERSION_RELATIVE_URI;
+                    }
+                    var tokenKey = new SASTokenKey()
                     {
                         Expiration = tsExpiration,
-                        Id = gid,
-                        Name = match.Groups["name"].Value,
+                        Id = id,
+                        Description = desc,
                         Version = version,
                         Secret = secret,
-                        Uri = new Uri(path, path.StartsWith("http")?UriKind.Absolute:UriKind.Relative)
+                        Uri = uri
                     };
-                    _tokenSources.Add(tokenSource);
-                    _tokenSourceLookup[tokenSource.Name] = tokenSource;
-                    _tokenSourceLookup[tokenSource.Id.ToString()] = tokenSource;
+                    _tokens[tokenKey.Id.ToString()] = tokenKey;
                 }
             }
-            _tokenSources.Sort((ts1, ts2) => ts1.Name.CompareTo(ts2.Name));
         }
 
-        public Task<TokenSource?> GetAsync(string name)
+        public Task<SASTokenKey?> GetAsync(string name)
         {
-            TokenSource? retVal;
-            _tokenSourceLookup.TryGetValue(name, out retVal);
+            SASTokenKey? retVal;
+            _tokens.TryGetValue(name, out retVal);
             return Task.FromResult(retVal);
         }
 
-        public Task<TokenSource?> GetAsync(Guid id)
+        public Task<SASTokenKey?> GetAsync(Guid id)
         {
-            TokenSource? retVal;
-            _tokenSourceLookup.TryGetValue(id.ToString(), out retVal);
+            SASTokenKey? retVal;
+            _tokens.TryGetValue(id.ToString(), out retVal);
             return Task.FromResult(retVal);
         }
 
-        public Task<TokenSource?> GetAsync(SASToken token) => GetAsync(token.Id);
+        public Task<SASTokenKey?> GetAsync(SASToken token) => GetAsync(token.Id);
 
-        public Task<IEnumerable<string>> GetNamesAsync()
+        public Task<IEnumerable<SASTokenKey>> GetAllAsync()
         {
-            return Task.FromResult((IEnumerable<string>)_tokenSources.Select(ts => ts.Name));
+            return Task.FromResult((IEnumerable<SASTokenKey>)(_tokens.Values.OrderBy(tk=>string.IsNullOrWhiteSpace(tk.Value.Description)?tk.Value.Id:tk.Value.Description).Select(tk=>tk.Value).ToArray()));
         }
-
-        public Task<IEnumerable<TokenSource>> GetAllAsync()
-        {
-            return Task.FromResult((IEnumerable<TokenSource>)_tokenSources);
-        }
-        public Task<TokenSource?> SaveAsync(TokenSource token)
+        public Task<SASTokenKey?> SaveAsync(SASTokenKey token)
         {
             throw new NotSupportedException();
         }
 
-        public Task<bool> RemoveAsync(TokenSource token)
+        public Task<bool> DeleteAsync(SASTokenKey token)
         {
             throw new NotSupportedException();
         }
@@ -120,17 +130,16 @@ namespace Authentication.SASToken.Providers
 
         public class Options
         {
-            /// <summary>
-            /// Regular Expression that Matches settings key.  Requires group: name
-            /// Default: ^SASToken-(?'name'.+?(-(Primary|Secondary))?)$
-            /// </summary>
-            /// <remarks>Key names are case-insensitive.</remarks>
-            public System.Text.RegularExpressions.Regex SASTokenNameMatch { get; set; } = new System.Text.RegularExpressions.Regex("^SASToken-(?'name'.+?(-(Primary|Secondary))?)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
+            public string SectionName { get; set; } = "SASTokenKeys";
             /// <summary>
             /// key name for id field.  value must be a valid GUID format
             /// </summary>
             public string FieldName_Id { get; set; } = "id";
+
+            /// <summary>
+            /// key name for id field.  value must be a valid GUID format
+            /// </summary>
+            public string FieldName_Description { get; set; } = "description";
 
             /// <summary>
             /// Key name for path.  can be either full path "http://example.com/api/endpoint" or relative "/api/endpoint"
@@ -149,13 +158,6 @@ namespace Authentication.SASToken.Providers
             /// Key name for default expiration of generated tokens. Uses TimeSpan format d.HH:mm:ss
             /// </summary>
             public string FieldName_Expiration { get; set; } = "expire";
-            /// <summary>
-            /// Regular Expression that Matches settings key.  Requires groups: id, path, secret  Optional group: version
-            /// Default: ^(?'id'.+?)\|(?'path'.+?)\|(?'secret'.+?)(\\|(?'version'\\d{4}\\-\\d{2}))?$
-            /// version is defaulted to 2021-02
-            /// secret should be random 32 bytes, base64 encoded
-            /// </summary>
-            public System.Text.RegularExpressions.Regex SASTokenValueParser { get; set; } = new System.Text.RegularExpressions.Regex("^(?'id'.+?)\\|(?'path'.+?)\\|(?'secret'.+?)(\\|(?'version'\\d{4}\\-\\d{2}))?$");
         }
 
     }

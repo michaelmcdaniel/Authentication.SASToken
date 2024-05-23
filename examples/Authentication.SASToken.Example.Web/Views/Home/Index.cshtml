@@ -1,9 +1,9 @@
-﻿@model IEnumerable<Authentication.SASToken.TokenSource>
+﻿@model IEnumerable<Authentication.SASToken.SASTokenKey>
 @{
     ViewData["Title"] = "Example SASToken Authentication";
 }
 <div v-cloak>
-    <div class="token-source" v-for="ts in tokenSources">
+	<div class="token-source" v-for="ts in tokenKeys">
         <div><label>Id: </label>{{ts.Id}}</div>
         <div><label>Name: </label>{{ts.Name}}</div>
         <div><label>Version: </label>{{ts.Expiration}}</div>
@@ -20,7 +20,7 @@
 @section Scripts {
     <script type="text/javascript">
         window.page = {
-            model : { "tokenSources": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model)) }
+            model : { "tokenKeys": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model)) }
         };
 
     </script>

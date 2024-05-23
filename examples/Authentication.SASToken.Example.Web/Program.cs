@@ -1,7 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-using Authentication.SASToken;
-using Authentication.SASToken.Authentication;
-
 namespace Authentication.SASToken.Example.Web
 {
     public class Program
@@ -46,13 +42,13 @@ namespace Authentication.SASToken.Example.Web
             app.UseStaticFiles();
 
             app.UseRouting();
-            app.UseSASTokenStore_InMemory((sp, tokenSourceProvider) =>
+            app.UseSASTokenStore_InMemory((sp, sasTokenStore) =>
             {
                 // we will just add all the app config token sources to the in-memory.
                 var appConfigMgr = sp.GetService<Providers.SASTokenManager_AppConfiguration>()!;
-                foreach(var name in appConfigMgr.GetNamesAsync().Result)
+                foreach(var tokenKey in appConfigMgr.GetAllAsync().Result)
                 {
-                    tokenSourceProvider.SaveAsync(appConfigMgr.GetAsync(name).GetAwaiter().GetResult()!.Value).GetAwaiter().GetResult();
+                    sasTokenStore.SaveAsync(appConfigMgr.GetAsync(tokenKey.Id).GetAwaiter().GetResult()!.Value).GetAwaiter().GetResult();
                 }
             });
             app.UseAuthentication();

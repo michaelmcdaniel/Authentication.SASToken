@@ -5,8 +5,6 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentication.SASToken", "src\Authentication.SASToken\Authentication.SASToken.csproj", "{57737CEE-C3F9-44A7-82FA-E7E666954035}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentication.SASToken.Tests", "tests\Authentication.SASToken.Tests\Authentication.SASToken.Tests.csproj", "{D7855795-3ED7-4CE3-BEA4-20239DCDDFC4}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{44D9521C-D0A9-4125-BCAA-634FDE45F6E9}"
 	ProjectSection(SolutionItems) = preProject
 		LICENSE = LICENSE
@@ -14,9 +12,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.github\workflows\release.yml = .github\workflows\release.yml
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentication.SASToken.Generator", "tools\Authentication.SASToken.Generator\Authentication.SASToken.Generator.csproj", "{760C02C2-27CB-4A8A-AB31-65A29040755F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentication.SASToken.Example.Web", "src\examples\Authentication.SASToken.Example.Web\Authentication.SASToken.Example.Web.csproj", "{7DB92227-7A34-4C46-856C-634381CC4CD5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentication.SASToken.Example.Web", "examples\Authentication.SASToken.Example.Web\Authentication.SASToken.Example.Web.csproj", "{4C2F519B-B058-42FA-A575-C793E260F70F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentication.SASToken.Tests", "src\tests\Authentication.SASToken.Tests\Authentication.SASToken.Tests.csproj", "{99A9EBBF-B640-4791-97BB-1BFA6321853E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentication.SASToken.Generator", "src\tools\Authentication.SASToken.Generator\Authentication.SASToken.Generator.csproj", "{5C9A6D61-014E-4C56-B5AE-473538D46B21}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,18 +28,18 @@ Global
 		{57737CEE-C3F9-44A7-82FA-E7E666954035}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57737CEE-C3F9-44A7-82FA-E7E666954035}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57737CEE-C3F9-44A7-82FA-E7E666954035}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D7855795-3ED7-4CE3-BEA4-20239DCDDFC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D7855795-3ED7-4CE3-BEA4-20239DCDDFC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D7855795-3ED7-4CE3-BEA4-20239DCDDFC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D7855795-3ED7-4CE3-BEA4-20239DCDDFC4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{760C02C2-27CB-4A8A-AB31-65A29040755F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{760C02C2-27CB-4A8A-AB31-65A29040755F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{760C02C2-27CB-4A8A-AB31-65A29040755F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{760C02C2-27CB-4A8A-AB31-65A29040755F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4C2F519B-B058-42FA-A575-C793E260F70F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4C2F519B-B058-42FA-A575-C793E260F70F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4C2F519B-B058-42FA-A575-C793E260F70F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4C2F519B-B058-42FA-A575-C793E260F70F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DB92227-7A34-4C46-856C-634381CC4CD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DB92227-7A34-4C46-856C-634381CC4CD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DB92227-7A34-4C46-856C-634381CC4CD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DB92227-7A34-4C46-856C-634381CC4CD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99A9EBBF-B640-4791-97BB-1BFA6321853E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99A9EBBF-B640-4791-97BB-1BFA6321853E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99A9EBBF-B640-4791-97BB-1BFA6321853E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99A9EBBF-B640-4791-97BB-1BFA6321853E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C9A6D61-014E-4C56-B5AE-473538D46B21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C9A6D61-014E-4C56-B5AE-473538D46B21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C9A6D61-014E-4C56-B5AE-473538D46B21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C9A6D61-014E-4C56-B5AE-473538D46B21}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

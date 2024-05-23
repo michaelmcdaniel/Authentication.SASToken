@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Authentication.SASToken\Authentication.SASToken.csproj" />
+    <ProjectReference Include="..\..\Authentication.SASToken\Authentication.SASToken.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -3,7 +3,7 @@ Authentication library to protect endpoints using Shared Access Signatures (SAST
 
 SASTokens are composed of version, roles, signature, expiration and Id.  Signatures are generated from a secret using HMACSHA256 where the version describes the information used to populate the signature data.  In the simplest form, the signature includes the Uri, roles and the expiration of the token.  The Id specifies which secret to use to generate the signature.  When validating the server will take it's own information and generate a signature to compare with what the client has sent.  Roles can be used to add additional security to endpoints requiring specific permissions.
 
-Tokens are verified using a **SASTokenKey** which contains all the properties of a SASToken with the addition of the Uri and secret used to generate the signature.
+Tokens are verified using a **SASTokenKey** which contains all the properties of a SASToken with the addition of the Uri and secret used to generate the signature.  Generated secrets are 32 bytes, base64 encoded.
 
 This implementation allows for tokens to be created using wildcard verification of the url path given at runtime using either header or query string.
 
@@ -19,7 +19,7 @@ Authorization: SharedAccessSignature  api-version=2024-01&sr=https%3A%2F%2Fexamp
 ```
 
 ## Rollover Guidance
-In many cases, it best to add at least 2 SASTokenKeys for rollover purpose.  When you want to expire SASTokens, you can use the secondary SASTokenKey to issue updated tokens to clients. After all clients have been updated, simply remove the old SASTokenKey and add another for a future rollover.
+In many cases, it best to add at least 2 SASTokenKeys for rollover purposes.  When you want to expire SASTokens, you can use the secondary SASTokenKey to issue updated tokens to clients. After all clients have been updated, simply remove the old SASTokenKey and add another for a future rollover.
 
 
 ## Wildcard paths
@@ -32,7 +32,7 @@ Path validation supports a wildcard character of an asterisk **\***. Single aste
 
 **/segment1/segment2/segment3** - exact path match only\
 **/segment1/segment2/segment\*** - match root segment '/segment1/segment2/' and 3rd segment must starts wit 'segment' *(only 3 segments allowed)*\
-**/seg\*\*** - match any path starting with 'segm' *('/seg/' included)*\
+**/seg\*\*** - match any path starting with 'seg' *('/seg/' included)*\
 **/\*\***  - match anything under root '/'\
 **/\*\*/segment3**  - match all paths that end with 'segment3'\
 **/\*/\*/segment3** - match any 2 segment names and ends with 'segment3' *(only 3 segments allowed)*\
@@ -142,11 +142,11 @@ When a SASToken is authenticated using attributes or configuration, the HttpCont
 #### Issued Claims
 | Type | Value | Cardinality |
 | ---- | ----- | ----------- |
-| http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifie | SASTokenKey.Id | 1..1 |
-| http://schemas.xmlsoap.org/ws/2005/05/identity/claims/uri | SASTokenKey.Uri | 1..1 |
-| http://schemas.microsoft.com/ws/2008/06/identity/claims/version | SASToken.Version | 1..1 |
-| http://schemas.microsoft.com/ws/2008/06/identity/claims/expiration | SASToken.Expiration.ToUnixTimeSeconds() | 1..1 |
-| http://schemas.microsoft.com/ws/2008/06/identity/claims/role | SASToken.Roles.Split(',') | 0..N |
+| [ClaimTypes.NameIdentifier](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.nameidentifier 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier') | SASTokenKey.Id | 1..1 |
+| [ClaimTypes.Uri](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.uri 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/uri') | SASTokenKey.Uri | 1..1 |
+| [ClaimTypes.Version](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.version 'http://schemas.microsoft.com/ws/2008/06/identity/claims/version') | SASToken.Version | 1..1 |
+| [ClaimTypes.Expiration](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.expiration 'http://schemas.microsoft.com/ws/2008/06/identity/claims/expiration') | SASToken.Expiration.ToUnixTimeSeconds() | 1..1 |
+| [ClaimTypes.Role](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.role 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role') | SASToken.Roles.Split(',') | 0..N |
 
 After adding the configuration, you can:
 ### Protect endpoints or entire controllers via attribute

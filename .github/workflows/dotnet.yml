@@ -33,6 +33,6 @@ jobs:
       env:
         NUGET_AUTH_TOKEN: ${{secrets.NUGET_API_KEY}}
     - name: Push to Github packages
-      run: dotnet nuget push "./src/Authentication.SASToken/bin/Release/*.nupkg" -k ${GITHUB_TOKEN} -s https://nuget.pkg.github.com/michaelmcdaniel/index.json
+      run: dotnet nuget push "./src/Authentication.SASToken/bin/Release/*.nupkg" -k ${GITHUB_TOKEN} -s https://nuget.pkg.github.com/michaelmcdaniel/index.json --skip-duplicate
       env:
         GITHUB_TOKEN: ${{secrets.API_GITHUB_TOKEN}} 

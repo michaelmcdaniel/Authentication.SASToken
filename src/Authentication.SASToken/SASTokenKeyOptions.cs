@@ -39,7 +39,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 		/// <summary>
 		/// signature function used to generate signatures
 		/// </summary>
-        public Func<Uri, DateTimeOffset, string, string>? Signature { get; set; } = null;
+        public Func<SASTokenKey, SASTokenOptions, string>? Signature { get; set; } = null;
 
 		/// <summary>
 		/// provides SASTokenKey resolution
@@ -63,13 +63,16 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
             if (signature == null) throw new NullReferenceException("TokenSource signature not found");
             return Task.FromResult<SASTokenKey?>(new SASTokenKey()
             {
-                Id = Id,
+                Id = Id??"",
                 Secret = Secret!,
                 Expiration = DefaultExpiration,
                 Description = ClaimsIssuer ?? "",
                 Uri = Uri!,
                 Signature = signature!,
-                Version = Version
+                Version = Version,
+				Resource = token.Resource,
+				AllowedIPAddresses = token.AllowedIPAddresses,
+				Protocol = token.Protocol
             });
         }
     }

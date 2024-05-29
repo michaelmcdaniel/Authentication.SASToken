@@ -14,10 +14,12 @@
 			<b>Try it: </b><br/>
 			<a :href="'/api/from-AddSASToken/claims?'+ts.token" title="try it out" target="_blank">/api/from-AddSASToken/claims</a><br />
 			<a :href="'/api/attribute-protected/claims?'+ts.token" title="try it out" target="_blank">/api/attribute-protected/claims</a><br />
-			<br/>
+			<a :href="'/api/inline/claims?'+ts.token" title="try it out" target="_blank">/api/inline/claims</a><br />
+			<br />
 			<i>These will fail with 403 if no Admin role.</i><br/>
 			<a :href="'/api/from-AddSASToken/admin-claims?'+ts.token" title="try it out" target="_blank">/api/from-AddSASToken/admin-claims</a><br />
 			<a :href="'/api/attribute-protected/admin-claims?'+ts.token" title="try it out" target="_blank">/api/attribute-protected/admin-claims</a><br />
+			<a :href="'/api/inline/admin-claims?'+ts.token" title="try it out" target="_blank">/api/inline/admin-claims</a><br />
 			<!--button @@click="getApiClaimsQS(ts.token)">Try It</button-->
         </div>
     </div>

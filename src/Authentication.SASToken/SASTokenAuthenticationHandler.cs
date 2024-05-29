@@ -89,23 +89,14 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 
             var authenticatingContext = new SASTokenAuthenticatingContext(Context, Scheme, Options);
             await Events.Authenticating(authenticatingContext);
-            if (!tokenKey.Value.Validate(token.Value, Request, null, Logger))
+            if (!tokenKey.Value.Validate(token.Value, Request, null, null, Request.HttpContext.Connection.RemoteIpAddress, Logger))
             {
 				_logger.LogDebug("SASToken validation failed - AuthenticateResult.Fail()");
 				return AuthenticateResult.Fail("Invalid SASToken");
             }
 			_logger.LogDebug($"SASToken validation succeeded {0}", token.Value.Id);
 
-			var claims = new List<Claim>(new[] {
-                    new Claim(ClaimTypes.NameIdentifier, token.Value.Id),
-                    new Claim(ClaimTypes.Expiration, token.Value.Expiration.ToUnixTimeSeconds().ToString()),
-                    new Claim(ClaimTypes.Uri, tokenKey.Value.Uri.ToString()),
-                    new Claim(ClaimTypes.Version, token.Value.Version)
-                });
-			claims.AddRange(token.Value.Roles?.Split(',').Select(r => r.Trim()).Where(r => !string.IsNullOrEmpty(r)).Select(r => new Claim(ClaimTypes.Role, r)));
-
-			var identity = new ClaimsIdentity(claims, Scheme.Name);
-            var principal = new ClaimsPrincipal(identity);
+			var principal = tokenKey.Value.ToClaimsPrincipal(token.Value, Scheme.Name);
             var authenticatedContext = new SASTokenAuthenticatedContext(Context, Scheme, Options, principal);
 			authenticatedContext.Properties.AllowRefresh = false;
 			authenticatedContext.Properties.IsPersistent = false;

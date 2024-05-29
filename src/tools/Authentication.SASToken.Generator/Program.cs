@@ -3,6 +3,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
 using System;
+using mcdaniel.ws.AspNetCore.Authentication.SASToken.Extensions;
+using System.Net;
+using System.Drawing;
 
 namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Generator
 {
@@ -11,7 +14,8 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Generator
         private static IServiceProvider? Services = null;
         static void Main(string[] args)
         {
-            ServiceCollection sc = new ServiceCollection();
+			var color = Console.ForegroundColor;
+			ServiceCollection sc = new ServiceCollection();
             sc.AddLogging(builder => builder.AddDebug());
             sc.AddSingleton<IConfiguration>(
                 new ConfigurationBuilder()
@@ -45,7 +49,10 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Generator
 			else Console.Write($"{tabs}\"path\":\"{JsonSafe(tokenKey.Uri.ToString())}\"");
 			if (!string.IsNullOrEmpty(tokenKey.Version)) Console.Write($",{tabs}\"version\":\"{JsonSafe(tokenKey.Version)}\"");
 			Console.Write($",{tabs}\"secret\":\"{JsonSafe(tokenKey.Secret)}\"");
-			if ((tokenKey.Expiration??TimeSpan.MaxValue) > TimeSpan.Zero && (tokenKey.Expiration ?? TimeSpan.MaxValue) != TimeSpan.MaxValue) Console.Write($",{tabs}\"expire\":\"{JsonSafe(tokenKey.Expiration.ToString()!)}\"");
+			if ((tokenKey.Expiration) > TimeSpan.Zero && (tokenKey.Expiration) != TimeSpan.MaxValue) Console.Write($",{tabs}\"expire\":\"{JsonSafe(tokenKey.Expiration.ToString()!)}\"");
+			if (!string.IsNullOrWhiteSpace(tokenKey.Resource)) Console.Write($",{tabs}\"resource\":\"{JsonSafe(tokenKey.Resource)}\"");
+			if (!string.IsNullOrWhiteSpace(tokenKey.AllowedIPAddresses)) Console.Write($",{tabs}\"ip\":\"{JsonSafe(tokenKey.AllowedIPAddresses)}\"");
+			if (!string.IsNullOrWhiteSpace(tokenKey.Protocol)) Console.Write($",{tabs}\"protocol\":\"{JsonSafe(tokenKey.Protocol)}\"");
 			if (!string.IsNullOrWhiteSpace(tokenKey.Id)) Console.Write("\r\n\t}");
 			Console.WriteLine("\r\n}");
 
@@ -53,7 +60,56 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Generator
 			Console.Write("Enter list of comma separated roles: ");
 			string roles = Console.ReadLine()??"";
 
-			var token = tokenKey.ToToken(roles);
+			string resource = "";
+			if (string.IsNullOrWhiteSpace(tokenKey.Resource))
+			{
+				Console.WriteLine("The token key allows for any resource. A resource for a token is strictly for information purposes only.");
+				Console.Write("Optional. Enter a resource for the SASToken: ");
+				resource = Console.ReadLine() ?? "";
+			}
+			else
+			{
+				Console.WriteLine("The token requires a resource name in the authentication token. Valid resource names are: ");
+				HashSet<string> resources = new HashSet<string>(tokenKey.Resource.Split(',').Select(r => r.Trim()).Where(r => !string.IsNullOrWhiteSpace(r)));
+				foreach (var rn in resources) Console.WriteLine("  - " + rn);
+				bool useResource = resources.Contains(resource);
+				while (!useResource)
+				{
+					Console.Write("Enter resource for the SASToken: ");
+					resource = Console.ReadLine() ?? "";
+					if (!(useResource = resource.Contains(resource)))
+					{
+						Console.ForegroundColor = ConsoleColor.Red;
+						Console.WriteLine("Resource name not found.");
+						Console.ForegroundColor = color;
+
+						Console.Write("Do you wish to use this resource name anyway? (Y/N): ");
+						var value = Console.ReadLine()!.ToLower();
+						if (value == "y" || value == "yes")
+						{
+							Console.ForegroundColor = ConsoleColor.Yellow;
+							Console.WriteLine("The generated SASToken will NOT be valid for this key!");
+							Console.ForegroundColor = color;
+							useResource = true;
+						}
+						else if ((value == "n" || value == "no"))
+						{
+							Console.ForegroundColor = ConsoleColor.Red;
+							Console.WriteLine("  Invalid Answer.");
+							Console.ForegroundColor = color;
+						}
+
+					}
+				}
+			}
+
+
+			var token = tokenKey.ToToken(new SASTokenOptions()
+			{
+				Roles = roles.Split(',').Select(r => r.Trim()).Where(r => !string.IsNullOrWhiteSpace(r)),
+				Resource = resource,
+			});
+
 			Console.WriteLine($"Default Token: {token.ToString()}");
 
             string check = "first";
@@ -129,7 +185,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Generator
             }
 
 			
-            Console.Write("Enter a short description for the SASTokens:");
+            Console.Write("Enter a short description for the SASTokens: ");
 			string sasDescription = Console.ReadLine()??"";
 
             string? sasSecret = null;
@@ -161,8 +217,8 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Generator
 				dns = Console.ReadLine()??"";
 			}
 
-			string? sasVersion = null;
-            Func<Uri, DateTimeOffset, string?, string>? signature = null;
+			string ? sasVersion = null;
+            Func<SASTokenKey, SASTokenOptions, string>? signature = null;
 			string defaultVersion;
 			string absoluteUriDefault = "";
 			string hostUriDefault = "";
@@ -235,7 +291,48 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Generator
                 }
             }
 
-            return new SASTokenKey()
+			string? sasResource = null;
+			Console.WriteLine("This key can optionally restrict SASTokens by requiring a resource name. Leave blank to accept any value.");
+			Console.Write("Enter the resource names (comma separated) that this key will protect: ");
+			sasResource = Console.ReadLine();
+
+			string? sasProtocol = null;
+			Console.WriteLine("This key can optionally restrict SASTokens by requiring a scheme (ex. http,https.) Leave blank to accept any protocol.");
+			Console.WriteLine("Individual SASTokens can also further restrict these protocols.");
+			Console.Write("Enter the protocol(s) - (comma separated) this key will allow: ");
+			sasProtocol = Console.ReadLine();
+
+			string? sasAllowedIPs = null;
+			Console.WriteLine("This key can optionally restrict SASTokens by only allowing certain ip address ranges. Comma separate for more than one range. formats:");
+			Console.WriteLine("  1.2.3.4  (single ip address)");
+			Console.WriteLine("  1.2.3.4/CIDR  (IP Address range using CIDR)");
+			Console.WriteLine("  1.2.3.0-1.2.3.255  (ip address range)");
+			Console.WriteLine("Individual SASTokens can also optionally include and override this range.");
+
+			bool validIPRange = true;
+			do
+			{
+				validIPRange = true;
+				try
+				{
+					Console.Write("Enter the IP Address (or range) this key will allow: ");
+					sasAllowedIPs = Console.ReadLine();
+					if (!string.IsNullOrWhiteSpace(sasAllowedIPs))
+					{
+						IPAddress.Any.IsInRange(sasAllowedIPs);
+					}
+				}
+				catch (Exception ex)
+				{
+					validIPRange = false;
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine("Invalid ip [range], please try again");
+					Console.ForegroundColor = color;
+				}
+			} while (!validIPRange);
+
+
+			return new SASTokenKey()
             {
                 Expiration = dt,
                 Id = sasId,
@@ -243,8 +340,11 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Generator
                 Secret = sasSecret,
                 Uri = uri,
                 Version = sasVersion!,
-                Signature = signature
-            };
+                Signature = signature,
+				Resource = string.IsNullOrWhiteSpace(sasResource) ? null : sasResource,
+				Protocol = string.IsNullOrWhiteSpace(sasProtocol) ? null : sasProtocol,
+				AllowedIPAddresses = string.IsNullOrWhiteSpace(sasAllowedIPs) ? null : sasAllowedIPs
+			};
 
         }
 

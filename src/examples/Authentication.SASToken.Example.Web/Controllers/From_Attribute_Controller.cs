@@ -20,7 +20,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Example.Web.Controllers
 		[HttpGet]
 		[Route("admin-claims")]
 		[ResponseCache(Duration = 0)]
-		[SASTokenAuthorization("Admin")]
+		[SASTokenAuthorization(new string[] { "Admin" })]
 		public IEnumerable<Models.ClaimModel> AdminClaims()
 		{
 			return User?.Claims?.Select(c => new Models.ClaimModel(c)) ?? new Models.ClaimModel[0];

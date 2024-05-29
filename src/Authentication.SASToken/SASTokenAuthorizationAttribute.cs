@@ -31,6 +31,14 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 		{
 			_roles = roles;
 		}
+		/// <summary>
+		/// Validates endpoint and requires any of the given roles.  If no roles are given all roles will be allowed.
+		/// </summary>
+		/// <param name="roles">list of roles to require</param>
+		public SASTokenAuthorizationAttribute(string[] roles)
+		{
+			_roles = roles;
+		}
 
 		/// <summary>
 		/// Validates endpoint and requires the resource and any of the given roles.  If no roles are given all roles will be allowed.
@@ -38,6 +46,17 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 		/// <param name="resource">resource required for token</param>
 		/// <param name="roles">list of roles to require</param>
 		public SASTokenAuthorizationAttribute(string resource, IEnumerable<string> roles)
+		{
+			_resource = resource;
+			_roles = roles;
+		}
+
+		/// <summary>
+		/// Validates endpoint and requires the resource and any of the given roles.  If no roles are given all roles will be allowed.
+		/// </summary>
+		/// <param name="resource">resource required for token</param>
+		/// <param name="roles">list of roles to require</param>
+		public SASTokenAuthorizationAttribute(string resource, string[] roles)
 		{
 			_resource = resource;
 			_roles = roles;

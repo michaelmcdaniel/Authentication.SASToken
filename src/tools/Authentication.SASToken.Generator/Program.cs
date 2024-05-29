@@ -322,7 +322,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Generator
 						IPAddress.Any.IsInRange(sasAllowedIPs);
 					}
 				}
-				catch (Exception ex)
+				catch (Exception)
 				{
 					validIPRange = false;
 					Console.ForegroundColor = ConsoleColor.Red;

@@ -41,6 +41,14 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 			return retVal;
 		}
 
+		/// <summary>
+		/// Validates token from HttpContext
+		/// </summary>
+		/// <param name="store">store to get SASTokenKey from</param>
+		/// <param name="context">HttpContext</param>
+		/// <param name="roles">Required Roles - if any</param>
+		/// <param name="resourceOverride">required resource - if any</param>
+		/// <returns>True if valid</returns>
 		public static async System.Threading.Tasks.Task<bool> ValidateAsync(this ISASTokenKeyResolver store, HttpContext context, IEnumerable<string>? roles = null, string? resourceOverride = null)
 		{
 			var token = context.Request.GetSASToken();
@@ -49,6 +57,14 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 			return key.Value.Validate(token, context.Request, roles, resourceOverride, context.Connection.RemoteIpAddress, context.RequestServices.GetService<ILogger<SASTokenKey>>());
 		}
 
+		/// <summary>
+		/// Validates token from HttpContext
+		/// </summary>
+		/// <param name="store">store to get SASTokenKey from</param>
+		/// <param name="context">HttpContext</param>
+		/// <param name="roles">Required Roles - if any</param>
+		/// <param name="resourceOverride">required resource - if any</param>
+		/// <returns>True if valid</returns>
 		public static async System.Threading.Tasks.Task<bool> ValidateAsync(this ISASTokenKeyStore store, HttpContext context, IEnumerable<string>? roles = null, string? resourceOverride = null)
 		{
 			var token = context.Request.GetSASToken();

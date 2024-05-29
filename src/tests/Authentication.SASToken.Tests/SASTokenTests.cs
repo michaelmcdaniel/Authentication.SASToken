@@ -5,8 +5,9 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Tests
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+	using System.Net;
 
-    [TestClass]
+	[TestClass]
     public class SASTokenTests
     {
         [TestMethod]
@@ -305,9 +306,137 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Tests
             Assert.IsFalse(source.Validate(token, new Uri("https://example.com/metrics2/test")));
             Assert.IsFalse(source.Validate(token, new Uri("https://example.com/metrics/test/deep/path")));
 
-        }
+			source = new SASTokenKey()
+			{
+				Id = "cd0ea1aa-9d04-4e4a-b787-f1996d3e5b93",
+				Expiration = TimeSpan.FromDays(255),
+				Description = "Name",
+				Uri = new Uri("/test*", UriKind.Relative),
+				Version = SASTokenKey.VERSION_RELATIVE_URI,
+				Secret = secret,
+				Protocol = "http"
+			};
 
-        [TestMethod]
+			token = source.ToToken();
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test"), scheme: "http"));
+			Assert.IsTrue(source.Validate(token, new Uri("https://example.com/test"), scheme: "https"));
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test")));
+			Assert.IsFalse(source.Validate(token, new Uri("https://example.com/test")));
+
+			source = new SASTokenKey()
+			{
+				Id = "cd0ea1aa-9d04-4e4a-b787-f1996d3e5b93",
+				Expiration = TimeSpan.FromDays(255),
+				Description = "Name",
+				Uri = new Uri("/test*", UriKind.Relative),
+				Version = SASTokenKey.VERSION_RELATIVE_URI,
+				Secret = secret,
+				Protocol = "http,https"
+			};
+
+			token = source.ToToken();
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test")));
+			Assert.IsTrue(source.Validate(token, new Uri("https://example.com/test")));
+			Assert.IsFalse(source.Validate(token, new Uri("ftp://example.com/test")));
+
+			source = new SASTokenKey()
+			{
+				Id = "cd0ea1aa-9d04-4e4a-b787-f1996d3e5b93",
+				Expiration = TimeSpan.FromDays(255),
+				Description = "Name",
+				Uri = new Uri("/test*", UriKind.Relative),
+				Version = SASTokenKey.VERSION_RELATIVE_URI,
+				Secret = secret,
+				Resource = "TEST"
+			};
+
+			token = source.ToToken();
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test"), resourceOverride: "TEST"));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), resourceOverride: "BAD"));
+			token = source.ToToken(new SASTokenOptions() { Resource = "" });
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test")));
+			token = source.ToToken(new SASTokenOptions() { Resource = "BAD" });
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test")));
+			token = source.ToToken(new SASTokenOptions() { Resource = "test" });
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test")));
+
+
+			source = new SASTokenKey()
+			{
+				Id = "cd0ea1aa-9d04-4e4a-b787-f1996d3e5b93",
+				Expiration = TimeSpan.FromDays(255),
+				Description = "Name",
+				Uri = new Uri("/test*", UriKind.Relative),
+				Version = SASTokenKey.VERSION_RELATIVE_URI,
+				Secret = secret,
+				AllowedIPAddresses = "10.10.10.10"
+			};
+
+			token = source.ToToken();
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.10")));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("1.1.1.1")));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.1.1.1")));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.1.1")));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.1")));
+
+			source = new SASTokenKey()
+			{
+				Id = "cd0ea1aa-9d04-4e4a-b787-f1996d3e5b93",
+				Expiration = TimeSpan.FromDays(255),
+				Description = "Name",
+				Uri = new Uri("/test*", UriKind.Relative),
+				Version = SASTokenKey.VERSION_RELATIVE_URI,
+				Secret = secret,
+				AllowedIPAddresses = "10.10.10.10-10.10.10.20"
+			};
+
+			token = source.ToToken();
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.10")));
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.15")));
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.20")));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("1.1.1.1")));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.9")));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.21")));
+
+			source = new SASTokenKey()
+			{
+				Id = "cd0ea1aa-9d04-4e4a-b787-f1996d3e5b93",
+				Expiration = TimeSpan.FromDays(255),
+				Description = "Name",
+				Uri = new Uri("/test*", UriKind.Relative),
+				Version = SASTokenKey.VERSION_RELATIVE_URI,
+				Secret = secret,
+				AllowedIPAddresses = "10.10.10.16/28"
+			};
+
+			token = source.ToToken();
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.16")));
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.20")));
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.31")));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("1.1.1.1")));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.15")));
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test"), clientIP: IPAddress.Parse("10.10.10.32")));
+
+			source = new SASTokenKey()
+			{
+				Id = "cd0ea1aa-9d04-4e4a-b787-f1996d3e5b93",
+				Expiration = TimeSpan.FromDays(255),
+				Description = "Name",
+				Uri = new Uri("/test*", UriKind.Relative),
+				Version = SASTokenKey.VERSION_RELATIVE_URI,
+				Secret = secret
+			};
+
+			token = source.ToToken(new SASTokenOptions() {  StartTime = DateTimeOffset.Now - TimeSpan.FromMinutes(1)});
+			Assert.IsTrue(source.Validate(token, new Uri("http://example.com/test")));
+			token = source.ToToken(new SASTokenOptions() { StartTime = DateTimeOffset.Now + TimeSpan.FromMinutes(1) });
+			Assert.IsFalse(source.Validate(token, new Uri("http://example.com/test")));
+
+			token = source.ToToken();
+
+		}
+
+		[TestMethod]
         public void TestAppConfiguration()
         {
             ServiceCollection services = new ServiceCollection();
@@ -366,6 +495,5 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Tests
             Assert.AreEqual(new Uri("/secondary", UriKind.Relative), test.Value.Uri);
             Assert.AreEqual("EjRWeJASNFZ4kBI0VniQEg==", test.Value.Secret);
         }
-
     }
 }

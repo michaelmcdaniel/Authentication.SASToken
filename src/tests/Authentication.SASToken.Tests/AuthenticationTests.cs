@@ -86,10 +86,10 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Tests
             var result = httpContext.AuthenticateAsync().Result;
             Assert.IsTrue(result.Succeeded);
 
-            var tokenStore = sp.GetService<ISASTokenKeyStore>();
+            var tokenStore = sp.GetService<ISASTokenKeyStore>()!;
             var loggerFactory = sp.GetService<ILoggerFactory>()!;
             EndpointValidator ev = new EndpointValidator(tokenStore, loggerFactory.CreateLogger<EndpointValidator>());
-            Assert.IsTrue(ev.IsValidAsync(token, httpContext.Request).Result);
+            Assert.IsTrue(ev.IsValidAsync(token, httpContext).Result);
 
         }
 
@@ -379,10 +379,10 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Tests
             var result = httpContext.AuthenticateAsync().Result;
             Assert.IsFalse(result.Succeeded);
 
-            var tokenStore = sp.GetService<ISASTokenKeyStore>();
+            var tokenStore = sp.GetService<ISASTokenKeyStore>()!;
             var loggerFactory = sp.GetService<ILoggerFactory>()!;
             EndpointValidator ev = new EndpointValidator(tokenStore, loggerFactory.CreateLogger<EndpointValidator>());
-            Assert.IsFalse(ev.IsValidAsync(token, httpContext.Request).Result);
+            Assert.IsFalse(ev.IsValidAsync(token, httpContext).Result);
         }
 
     }

@@ -35,8 +35,11 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
             var path = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Path)?.Value;
             var secret = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Secret)?.Value;
             var version = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Version)?.Value;
-            var expiration = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Expiration)?.Value;
-            bool hasDefaultTokenKey = false;
+			var expiration = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Expiration)?.Value;
+			var resource = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Resource)?.Value;
+			var allowedIPs = children.FirstOrDefault(c => c.Key == options.Value.FieldName_AllowedIPAddresses)?.Value;
+			var protocol = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Protocol)?.Value;
+			bool hasDefaultTokenKey = false;
             if (!string.IsNullOrWhiteSpace(path) && Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri) && !string.IsNullOrWhiteSpace(secret))
             {
 				if (string.IsNullOrWhiteSpace(version))
@@ -55,7 +58,10 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
                     Description = desc,
                     Version = version,
                     Secret = secret,
-                    Uri = uri
+                    Uri = uri,
+                    Resource = resource,
+                    AllowedIPAddresses = allowedIPs,
+                    Protocol = protocol
                 };
                 _tokens[tokenKey.Id] = tokenKey;
                 hasDefaultTokenKey = true;
@@ -69,8 +75,11 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
                         tk.Key == options.Value.FieldName_Path ||
                         tk.Key == options.Value.FieldName_Secret ||
                         tk.Key == options.Value.FieldName_Version ||
-                        tk.Key == options.Value.FieldName_Expiration
-                    )) continue;
+						tk.Key == options.Value.FieldName_Expiration ||
+						tk.Key == options.Value.FieldName_Resource ||
+						tk.Key == options.Value.FieldName_AllowedIPAddresses ||
+						tk.Key == options.Value.FieldName_Protocol
+					)) continue;
 
                 var fields = tk.GetChildren().ToList();
 				id = tk.Key;
@@ -81,7 +90,10 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
                 secret = fields.FirstOrDefault(c => c.Key == options.Value.FieldName_Secret)?.Value;
                 version = fields.FirstOrDefault(c => c.Key == options.Value.FieldName_Version)?.Value;
                 expiration = fields.FirstOrDefault(c => c.Key == options.Value.FieldName_Expiration)?.Value;
-                if (!string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(path) && Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri) && !string.IsNullOrWhiteSpace(secret))
+				resource = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Resource)?.Value;
+				allowedIPs = children.FirstOrDefault(c => c.Key == options.Value.FieldName_AllowedIPAddresses)?.Value;
+				protocol = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Protocol)?.Value;
+				if (!string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(path) && Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri) && !string.IsNullOrWhiteSpace(secret))
                 {
                     TimeSpan tsExpiration;
                     if (string.IsNullOrWhiteSpace(expiration) || !TimeSpan.TryParse(expiration, out tsExpiration)) tsExpiration = TimeSpan.MaxValue;
@@ -98,7 +110,10 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
                         Description = desc,
                         Version = version,
                         Secret = secret,
-                        Uri = uri
+                        Uri = uri,
+                        Resource = resource,
+                        AllowedIPAddresses = allowedIPs,
+                        Protocol = protocol
                     };
                     _tokens[tokenKey.Id.ToString()] = tokenKey;
                 }
@@ -187,11 +202,26 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
             /// version is defaulted to 1.0.0.0
             public string FieldName_Version { get; set; } = "version";
 
-            /// <summary>
-            /// Key name for default expiration of generated tokens. Uses TimeSpan format d.HH:mm:ss
-            /// </summary>
-            public string FieldName_Expiration { get; set; } = "expire";
-        }
+			/// <summary>
+			/// Key name for default expiration of generated tokens. Uses TimeSpan format d.HH:mm:ss
+			/// </summary>
+			public string FieldName_Expiration { get; set; } = "expire";
 
-    }
+			/// <summary>
+			/// Optional. Key name for default resource of generated tokens.
+			/// </summary>
+			public string FieldName_Resource { get; set; } = "resource";
+
+			/// <summary>
+			/// Key name for default for allowed ip address(es.)  Uses formats: x.x.x.x, x.x.x.x/cidr, x.x.x.x-x.x.x.x (where x.x.x.x is ipv4 or ipv6)
+			/// </summary>
+			public string FieldName_AllowedIPAddresses { get; set; } = "ip";
+
+			/// <summary>
+			/// Key name for default protocol of generated tokens. comma separated list of schemes: http,https
+			/// </summary>
+			public string FieldName_Protocol { get; set; } = "protocol";
+		}
+
+	}
 }

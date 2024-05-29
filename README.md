@@ -1,7 +1,7 @@
 # Authentication.SASToken
 Authentication library to protect endpoints using Shared Access Signatures (SASToken)
 
-SASTokens are composed of version, roles, signature, expiration and Id.  Signatures are generated from a secret using HMACSHA256 where the version describes the information used to populate the signature data.  In the simplest form, the signature includes the Uri, roles and the expiration of the token.  The Id specifies which secret to use to generate the signature.  When validating the server will take it's own information and generate a signature to compare with what the client has sent.  Roles can be used to add additional security to endpoints requiring specific permissions.
+SASTokens can be composed of unique identifier, version, roles [or permissions], signature, expiration, start time, resource, ip [or range] and/or scheme.  Signatures are generated from a secret using HMACSHA256 where the version describes the information used to populate the signature data.  In the simplest form, the signature includes the Uri and the expiration of the token.  The Id specifies which secret to use to generate the signature.  When validating, the server will take it's own information about the request and generate a signature to compare with what the client has sent.  Roles, resource, allowed ip addresses, and schemes can be used to add additional security to endpoints.
 
 Tokens are verified using a **SASTokenKey** which contains all the properties of a SASToken with the addition of the Uri and secret used to generate the signature.  Generated secrets are 32 bytes, base64 encoded.
 
@@ -9,13 +9,13 @@ This implementation allows for tokens to be created using wildcard verification 
 
 #### Url Authentication Example
 ```
-https://example.com/api/get-user?api-version=2024-01&sr=https%3A%2F%2Fexample.com%2Fapi%2F**&sig=yjqFaDKxaVBXLhNBIxl%2FhFjVJeEe1UUIzI%2F28LtdJ0U%3D&se=1716400963&skn=99333392-1132-402a-838e-b4962b05c67e
+https://example.com/api/get-user?api-version=2024-01&sp=https%3A%2F%2Fexample.com%2Fapi%2F**&sig=yjqFaDKxaVBXLhNBIxl%2FhFjVJeEe1UUIzI%2F28LtdJ0U%3D&se=1716400963&skn=99333392-1132-402a-838e-b4962b05c67e
 ```
 #### Header Authentication Example
 ```
 GET https://example.com/api/get-user HTTP/1.1
 Host: example.com
-Authorization: SharedAccessSignature  api-version=2024-01&sr=https%3A%2F%2Fexample.com%2Fapi%2F**&sig=yjqFaDKxaVBXLhNBIxl%2FhFjVJeEe1UUIzI%2F28LtdJ0U%3D&se=1716400963&skn=99333392-1132-402a-838e-b4962b05c67e
+Authorization: SharedAccessSignature  api-version=2024-01&sp=https%3A%2F%2Fexample.com%2Fapi%2F**&sig=yjqFaDKxaVBXLhNBIxl%2FhFjVJeEe1UUIzI%2F28LtdJ0U%3D&se=1716400963&skn=99333392-1132-402a-838e-b4962b05c67e
 ```
 
 ## Rollover Guidance
@@ -59,7 +59,10 @@ Add the following to your appsettings.json for a **SASTokenKey**.  This will be 
                 "path":"https://example.com/api/**",
                 "version":"2024-01",
                 "secret":"KBpx2E2FH/WM2hEuDr82m0OyDyscyGcvU/4Zn40AOFQ=",
-                "expire":"0.00:05:00"
+                "expire":"0.00:05:00",
+                "resource":"users",
+                "ip":"0.0.0.0/0",
+                "protocol":"https"
         }
 }
 ```
@@ -81,7 +84,10 @@ app.UseSASTokenStore_InMemory((services,tokenStore)=>{
 		Secret = "KBpx2E2FH/WM2hEuDr82m0OyDyscyGcvU/4Zn40AOFQ=",
 		Uri = new Uri("https://example.com/api/**"),
 		Version = SASTokenKey.VERSION_ABSOLUTE_URI,
-		Expiration = TimeSpan.FromMinutes(5.0)
+		Expiration = TimeSpan.FromMinutes(5.0),
+		Resource = "users",
+		AllowedIPAddresses = "192.168.1.10",
+		Protocol = "https,http"
 	}).Result;
 });
 ```
@@ -96,7 +102,7 @@ C:\>Authentication.SASToken.Generator.exe
 It is recommended to use a Guid for SASToken Ids.
   - A blank Id will create a new Guid id.
 Enter SASTokenKey Id: 99333392-1132-402a-838e-b4962b05c67e
-Enter a short description for the SASTokens:Example
+Enter a short description for the SASTokens: Example
 Enter the Secret used to generated the SASToken signature.
   - Leave blank to generate a new secret
 Enter Secret: KBpx2E2FH/WM2hEuDr82m0OyDyscyGcvU/4Zn40AOFQ=
@@ -106,26 +112,43 @@ Enter a relative or absolute url that this token will be valid for.
 Enter url: https://example.com/api/**
 Enter the version for the signature generation.  Leave blank to use default based on Uri
 Allowed Versions:
-        2024-01 = full uri in signature (Default)
-        2024-02 = host only in signature
-        2024-03 = uses a relative uri in the signature
+        2024-04 = full uri in signature (Default)
+        2024-05 = host only in signature
+        2024-06 = uses a relative uri in the signature
 Enter Version:
-Using Version: 2024-01
+Using Version: 2024-04
 Enter an expiration timespan that default tokens generated with this TokenSource will only be valid for.  Leave blank for max
 Enter expiration timespan (d.HH:mm:ss): 0.00:05:00
+This key can optionally restrict SASTokens by requiring a resource name. Leave blank to accept any value.
+Enter the resource names (comma separated) that this key will protect: users
+This key can optionally restrict SASTokens by requiring a scheme (ex. http,https.) Leave blank to accept any protocol.
+Individual SASTokens can also further restrict these protocols.
+Enter the protocol(s) - (comma separated) this key will allow: https
+This key can optionally restrict SASTokens by only allowing certain ip address ranges. Comma separate for more than one range. formats:
+  1.2.3.4  (single ip address)
+  1.2.3.4/CIDR  (IP Address range using CIDR)
+  1.2.3.0-1.2.3.255  (ip address range)
+Individual SASTokens can also optionally include and override this range.
+Enter the IP Address (or range) this key will allow: ::/0
 appsettings.json format:
 "SASTokenKeys": {
         "99333392-1132-402a-838e-b4962b05c67e" : {
                 "description":"Example",
                 "path":"https://example.com/api/**",
-                "version":"2024-01",
+                "version":"2024-04",
                 "secret":"KBpx2E2FH/WM2hEuDr82m0OyDyscyGcvU/4Zn40AOFQ=",
-                "expire":"00:05:00"
+                "expire":"00:05:00",
+                "resource":"users",
+                "ip":"::/0",
+                "protocol":"https"
         }
 }
 Roles are applied to a specific token and can be used during authentication. (not required)
 Enter list of comma separated roles: Read,Write
-Default Token: api-version=2024-01&sr=Read%2CWrite&sig=MySPFdWcGU2bawLWljxqxF3Xwvf5kPgdMb2pOTpTm9Y%3D&se=1716479220&skn=99333392-1132-402a-838e-b4962b05c67e
+The token requires a resource name in the authentication token. Valid resource names are:
+  - users
+Enter resource for the SASToken: users
+Default Token: sv=2024-04&sr=users&sp=Read%2CWrite&sig=%2Fh6cXbnswIU6ur0UXrIDWwfQ1ru3Wfg7v5tM6KnGo1s%3D&se=1717010687&skn=99333392-1132-402a-838e-b4962b05c67e&spr=https&sip=%3A%3A%2F0
 Enter a url to validate token (press enter to exit)
 Url: https://example.com/api/get-user
 Token Validated
@@ -146,6 +169,7 @@ When a SASToken is authenticated using attributes or configuration, the HttpCont
 | [ClaimTypes.Uri](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.uri 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/uri') | SASTokenKey.Uri | 1..1 |
 | [ClaimTypes.Version](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.version 'http://schemas.microsoft.com/ws/2008/06/identity/claims/version') | SASToken.Version | 1..1 |
 | [ClaimTypes.Expiration](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.expiration 'http://schemas.microsoft.com/ws/2008/06/identity/claims/expiration') | SASToken.Expiration.ToUnixTimeSeconds() | 1..1 |
+| [ClaimTypes.System](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.system 'http://schemas.microsoft.com/ws/2008/06/identity/claims/system') | SASToken.Resource | 1..N (comma separated) |
 | [ClaimTypes.Role](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.role 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role') | SASToken.Roles.Split(',') | 0..N |
 
 After adding the configuration, you can:
@@ -155,8 +179,8 @@ After adding the configuration, you can:
 [SASTokenAuthorization]
 public class MyProtectedController() { ... } 
 
-// Allow either Admins or PowerUsers
-[SASTokenAuthorization("Admin", "PowerUser")]
+// Allow Admins or PowerUsers
+[SASTokenAuthorization(new string[] { "Admin", "PowerUser" })]
 public IActionResult GetUsers() => _impl.GetUsers().ToClientModel(); 
 ```
 
@@ -171,27 +195,30 @@ services.AddAuthentication().AddSASToken(options => {...});
 // FROM HEADER
 public async Task<IActionResult> GetUsersAsync([FromServices] ISASTokenKeyStore store)
 {
-	var token = Request.GetSASToken();
-	if (!(await store.GetAsync(token))?.Validate(token, Request)??false) return Forbid();
-	return (await _sdk.GetUsersAsync()).ToClientModel(); 
+	if (!await store.ValidateAsync(HttpContext)) return Forbid();
+	return Json((await _sdk.GetUsersAsync()).ToClientModel()); 
 }
 
 // FROM QUERY STRING
-public async Task<IActionResult> GetUsersAsync([FromQuery(Name = "api-version")] string v, [FromQuery] string sr, [FromQuery] string sig, [FromQuery] long se, [FromQuery] string skn, [FromServices] ISASTokenKeyStore store)
+public async Task<IActionResult> GetUsersAsync([FromServices] ISASTokenKeyStore store, [FromQuery(Name = "sv")] string v, [FromQuery] string sig, [FromQuery] long se, [FromQuery] string skn, [FromQuery] string? sp = null, [FromQuery] string? sip = null, [FromQuery] string? sr = null, [FromQuery] string? spr = null, [FromQuery] long st = 0)
 {
-	Guid sknId;
-	Guid.TryParse(skn, out sknId);
 	var token = new SASToken()
 	{
-		Id = sknId,
+		Id = skn,
 		Expiration = DateTimeOffset.FromUnixTimeSeconds(se),
 		Signature = sig,
-		Roles = sr,
-		Version = v
+		Roles = sp,
+		Version = v,
+		AllowedIPAddresses = sip,
+		Protocol = spr,
+		Resource = sr,
+		StartTime = st == 0 ? DateTimeOffset.MinValue : DateTimeOffset.FromUnixTimeSeconds(st)
 	};
-	string[] anyUserInRoles = new string[] {"Admin", "PowerUsers"};
-	if (!(await store.GetAsync(token))?.Validate(token, Request, anyUserInRoles, _logger)??false) return Forbid();
-	return (await _sdk.GetUsersAsync()).ToClientModel(); 
+	string[] anyUserInRoles = new string[] { "Admin", "PowerUsers" };
+	var tokenKey = await _tokenStore.GetAsync(token);
+	if (!tokenKey?.Validate(token, Request, anyUserInRoles, null, HttpContext.Connection.RemoteIpAddress, _logger) ?? false) return Forbid();
+
+	return Json((await _sdk.GetUsersAsync()).ToClientModel()); 
 }
 
 ```

@@ -15,7 +15,7 @@
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<RootNamespace>mcdaniel.ws.AspNetCore.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
-		<Version>2.1.0</Version>
+		<Version>2.1.1</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />

@@ -93,6 +93,24 @@ app.UseSASTokenStore_InMemory((services,tokenStore)=>{
 ```
 
 
+
+## Using Files for key storage
+Add the following to your program.cs (or startup.cs)
+*Uses IDataProtectionProvider (if configured) for secrets*
+```
+services.AddDataProtection();
+services.AddSASTokenStore_File(options => {
+	options.BasePath = "~/secrets"; // supports full path or default of "~/" (IWebHostEnvironment.ContentRootPath)
+	//options.FileNameFormat = "{Id}.json"; // also support properties ""{Description}\{Id}.json"
+	//options.SearchPattern = "*.json"; // should match FileNameFormat
+	//options.PreCache = true; // cache in-memory cache onload/save
+	//options.SlidingCacheTime = TimeSpan.Zero; // indefinite in-memory caching
+	//options.RemoveEmptyFolders = true; // used with folder in FileNameFormat - will remove empty folders
+	//options.DefaultKeyName = Guid.Empty.ToString(); // default key name where Id is empty
+});
+```
+
+
 # Generating Tokens
 Included is a console application **Authentication.SASToken.Generator** to generate new SASTokenKeys and SASTokens.  Running the console will allow you to create the required configuration and a valid SASToken for authentication.
 

@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+#nullable enable
 
 namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 {
@@ -34,9 +35,9 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 		private readonly ILogger<SASTokenManager_File> _logger;
 		private readonly IOptions<SASTokenManager_File.Options> _options;
 		private readonly IWebHostEnvironment _hostingEnv;
-		private readonly IDataProtectionProvider _protectionProvider;
+		private readonly IDataProtectionProvider? _protectionProvider;
 		private readonly IMemoryCache _cache;
-		private FileSystemWatcher _watcher = null;
+		private FileSystemWatcher? _watcher = null;
 
 		private ConcurrentDictionary</*Id*/string, /*Path*/string> _PathsById = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		private ConcurrentDictionary</*Path*/string, /*Id*/string> _IdsByPath = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -115,7 +116,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 				_logger.LogDebug("File changed: {0}", fso.FullPath);
 				SASTokenKey? key = null;
 				if (!System.IO.File.Exists(fso.FullPath)) return;
-				if (_Saves.TryDequeue(out string justSaved) && justSaved == fso.FullPath)
+				if (_Saves.TryDequeue(out string? justSaved) && justSaved == fso.FullPath)
 				{
 					_logger.LogDebug("Just saved: skipping file changed event: {0} - {1}", (_options.Value.PreCache ? " (precache)" : ""), fso.FullPath);
 					return;
@@ -154,10 +155,10 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 			_watcher.Deleted += (s, fso) => {
 				_logger.LogDebug("File deleted - removing {0}", fso.FullPath);
 				_cache.Remove(fso.FullPath);
-				if (_IdsByPath.TryGetValue(fso.FullPath, out string id))
+				if (_IdsByPath.TryGetValue(fso.FullPath, out string? id))
 				{
-					_IdsByPath.Remove(fso.FullPath, out string _);
-					_PathsById.Remove(id, out string _);
+					_IdsByPath.Remove(fso.FullPath, out string? _);
+					_PathsById.Remove(id, out string? _);
 				}
 			};
 			_watcher.EnableRaisingEvents = true;
@@ -193,24 +194,27 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 				if (_options.Value.RemoveEmptyFolders)
 				{
 					string basePath = GetBasePath();
-					string dir = Path.GetDirectoryName(filename);
-					_logger.LogTrace("Checking for empty folders: start at {0} until parent: {1}", dir, basePath);
-					try
+					string? dir = Path.GetDirectoryName(filename);
+					if (dir != null)
 					{
-						do
+						_logger.LogTrace("Checking for empty folders: start at {0} until parent: {1}", dir, basePath);
+						try
 						{
-							if (System.IO.Directory.EnumerateFiles(dir).Count() == 0)
+							do
 							{
-								_logger.LogInformation("Removing folder: {0}", dir);
-								System.IO.Directory.Delete(dir, false);
-							}
-							else break;
-						} while (!(dir = Path.GetDirectoryName(dir)).Equals(basePath, StringComparison.OrdinalIgnoreCase));
-					}
-					catch (Exception ex)
-					{
-						// just report and move on.
-						_logger.LogWarning(ex, $"Unable to remove folder: {dir}");
+								if (System.IO.Directory.EnumerateFiles(dir!).Count() == 0)
+								{
+									_logger.LogInformation("Removing folder: {0}", dir);
+									System.IO.Directory.Delete(dir!, false);
+								}
+								else break;
+							} while (!((dir = Path.GetDirectoryName(dir))?.Equals(basePath, StringComparison.OrdinalIgnoreCase)??false));
+						}
+						catch (Exception ex)
+						{
+							// just report and move on.
+							_logger.LogWarning(ex, $"Unable to remove folder: {dir}");
+						}
 					}
 				}
 			}
@@ -218,8 +222,8 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 			{
 				_logger.LogDebug("Token not found: {0}", filename);
 			}
-			_PathsById.Remove(token.Id, out string _);
-			_IdsByPath.Remove(filename, out string _);
+			_PathsById.Remove(token.Id, out string? _);
+			_IdsByPath.Remove(filename, out string? _);
 			return Task.FromResult(removed);
 		}
 
@@ -229,7 +233,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 		/// <returns>list of SASTokenKeys</returns>
 		public Task<IEnumerable<SASTokenKey>> GetAllAsync()
 		{
-			return Task.FromResult((IEnumerable<SASTokenKey>)_PathsById.Keys.Select(k=> GetAsync(k).GetAwaiter().GetResult()).Where(k=>k!=null).Select(k=>k.Value).ToList());
+			return Task.FromResult((IEnumerable<SASTokenKey>)_PathsById.Keys.Select(k=> GetAsync(k).GetAwaiter().GetResult()).Where(k=>k!=null).Select(k=>k!.Value).ToList());
 		}
 
 		/// <summary>
@@ -239,15 +243,15 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 		/// <returns></returns>
 		public async Task<SASTokenKey?> GetAsync(string id)
 		{
-			string path = null;
+			string? path = null;
 			if (!_PathsById.TryGetValue(id, out path)) return null;
 			return await _cache.GetOrCreateAsync<SASTokenKey?>(path, async (ce) =>
 			{
 				ce.SlidingExpiration = _options.Value.SlidingCacheTime <= TimeSpan.Zero ? null : _options.Value.SlidingCacheTime;
 				if (!System.IO.File.Exists(path))
 				{
-					_IdsByPath.Remove(path, out string _);
-					_PathsById.Remove(id, out string _);
+					_IdsByPath.Remove(path, out string? _);
+					_PathsById.Remove(id, out string? _);
 					_logger.LogDebug("Reading file \"{0}\" from: \"{1}\"", id, path);
 					return null;
 				}
@@ -293,8 +297,8 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 		public async Task<SASTokenKey?> SaveAsync(SASTokenKey token)
 		{
             string filename = GetFileName(token);
-			string path = System.IO.Path.GetDirectoryName(filename);
-			if (!System.IO.Directory.Exists(path))
+			string? path = System.IO.Path.GetDirectoryName(filename);
+			if (!string.IsNullOrEmpty(path) && !System.IO.Directory.Exists(path))
 			{
 				_logger.LogDebug("Creating directory \"{0}\"", path);
 				System.IO.Directory.CreateDirectory(path);
@@ -345,7 +349,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 			foreach(var property in key.GetType()
 				.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.GetProperty | System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance)
 				.Where(p=>p.Name != "Secret" && (p.Name=="Id" || !string.IsNullOrWhiteSpace(p.GetValue(key)?.ToString())))
-				.Select(p=>new KeyValuePair<string,string>(p.Name, p.GetValue(key).ToString())))
+				.Select(p=>new KeyValuePair<string,string>(p.Name, p.GetValue(key)?.ToString()??"")))
 			{
 
 				s = s.Replace("{" + property.Key + "}", Encode((property.Key=="Id" && string.IsNullOrWhiteSpace(property.Value))?_options.Value.DefaultKeyName:property.Value), StringComparison.OrdinalIgnoreCase);

@@ -25,5 +25,14 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Example.Web.Controllers
 		{
 			return User?.Claims?.Select(c => new Models.ClaimModel(c)) ?? new Models.ClaimModel[0];
 		}
+
+		[HttpGet]
+		[Route("claim-value")]
+		[ResponseCache(Duration = 0)]
+		[SASTokenAuthorization]
+		public IEnumerable<Models.ClaimModel> claims([FromQuery] [SASTokenResource]string type)
+		{
+			return User?.Claims?.Where(c=>c.Type== type)?.Select(c => new Models.ClaimModel(c)) ?? new Models.ClaimModel[0];
+		}
 	}
 }

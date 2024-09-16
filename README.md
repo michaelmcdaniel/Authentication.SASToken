@@ -200,6 +200,10 @@ public class MyProtectedController() { ... }
 // Allow Admins or PowerUsers
 [SASTokenAuthorization(new string[] { "Admin", "PowerUser" })]
 public IActionResult GetUsers() => _impl.GetUsers().ToClientModel(); 
+
+// Protect specific resource - requires token with id as resource.
+[SASTokenAuthorization]
+public IActionResult GetUser([SASTokenResource]Guid id) => _impl.GetUser(id).ToClientModel(); 
 ```
 
 ### Protect entire paths via configuration in program.cs (or startup.cs)

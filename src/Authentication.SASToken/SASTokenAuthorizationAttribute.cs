@@ -6,6 +6,7 @@ using System.Security.Claims;
 using mcdaniel.ws.AspNetCore.Authentication.SASToken;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 {
@@ -16,6 +17,8 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 	{
 		private IEnumerable<string> _roles = null;
 		private string _resource = null;
+		private IEnumerable<KeyValuePair<string, object>> _resources = null;
+
 		/// <summary>
 		/// Validates endpoint.
 		/// </summary>
@@ -63,6 +66,23 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 		}
 
 		/// <summary>
+		/// Adds possible SASTokenResources from input parameters.
+		/// </summary>
+		/// <param name="context"></param>
+		public override void OnActionExecuting(ActionExecutingContext context)
+		{
+			_resources = context.ActionDescriptor.Parameters
+			.Where(p => p is ControllerParameterDescriptor && ((ControllerParameterDescriptor)p).ParameterInfo.GetCustomAttributes(typeof(SASTokenResourceAttribute), false).Count() > 0)
+			.Select(p =>
+			{
+				object value;
+				context.ActionArguments.TryGetValue(p.Name, out value);
+				return new KeyValuePair<string, object>(p.Name, value);
+			});
+			base.OnActionExecuting(context);
+		}
+
+		/// <summary>
 		/// Returns 403 if validation fails.
 		/// </summary>
 		/// <param name="context"></param>
@@ -72,11 +92,18 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 			Microsoft.Extensions.Logging.ILoggerFactory loggerFactory = context.HttpContext.RequestServices.GetService<Microsoft.Extensions.Logging.ILoggerFactory>();
 
 			SASToken token = context.HttpContext.GetSASToken();
+			string resource = _resource;
+			if (_resources?.Count() == 1 && string.IsNullOrEmpty(resource)) resource = _resources!.First().Value?.ToString() ?? "";
+			else if (_resources != null && !string.IsNullOrWhiteSpace(resource))
+			{
+				foreach (var kvp in _resources) resource = resource.Replace("{" + kvp.Key + "}", kvp.Value?.ToString() ?? "");
+			}
+
 			SASTokenKey? tokenKey;
 			if (!(
 					!token.IsEmpty &&
 					(tokenKey = tsStore.GetAsync(token).Result).HasValue &&
-					tokenKey.Value.Validate(token, context.HttpContext.Request, _roles, _resource, context.HttpContext.Connection.RemoteIpAddress, loggerFactory.CreateLogger<SASTokenAuthorizationAttribute>())
+					tokenKey.Value.Validate(token, context.HttpContext.Request, _roles, resource, context.HttpContext.Connection.RemoteIpAddress, loggerFactory.CreateLogger<SASTokenAuthorizationAttribute>())
 				))
 			{
 				context.Result = new StatusCodeResult(403);

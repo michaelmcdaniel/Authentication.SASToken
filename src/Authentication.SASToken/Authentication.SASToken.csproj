@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net7.0;</TargetFrameworks>
+		<TargetFramework>net8.0</TargetFramework>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>SASToken Authentication</Title>
 		<Authors>@michaelmcdaniel</Authors>
@@ -15,22 +15,13 @@
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<RootNamespace>mcdaniel.ws.AspNetCore.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
-		<Version>2.1.1</Version>
+		<Version>2.2.0</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-	</ItemGroup>
-	
-	<ItemGroup Condition="'$(TargetFramework)'=='net7.0'">
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="7.0.1" />
-		<PackageReference Include="System.Text.Json" Version="7.0.4" />
-	</ItemGroup>
-	
-	<ItemGroup Condition="'$(TargetFramework)'=='net8.0'">
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
-		<PackageReference Include="System.Text.Json" Version="8.0.3" />
+		<PackageReference Include="System.Text.Json" Version="8.0.4" />
 	</ItemGroup>
 	
 	<ItemGroup>

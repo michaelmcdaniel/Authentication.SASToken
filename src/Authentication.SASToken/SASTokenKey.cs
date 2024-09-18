@@ -316,15 +316,16 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 				return false;
 			}
 
-			if (!string.IsNullOrWhiteSpace(resourceOverride ?? Resource))
+			// We will only for a resource if the SASTokenKey has a resource
+			if (!string.IsNullOrWhiteSpace(Resource))
 			{
-				if (string.IsNullOrWhiteSpace(token.Resource))
+				if (string.IsNullOrEmpty(resourceOverride ?? token.Resource))
 				{
-					if (logger != null) logger.LogDebug("Token validation failed {0}: no token resource found. required: {2}", token, resourceOverride ?? Resource);
+					if (logger != null) logger.LogDebug("Token validation failed {0}: token resource required: {1}", token, token.Resource);
 					return false;
 				}
-				HashSet<string> reqResources = new HashSet<string>((resourceOverride ?? Resource)!.Split(',').Select(p => p.Trim().ToLowerInvariant()).Where(p => !string.IsNullOrWhiteSpace(p)));
-				HashSet<string> forResources = new HashSet<string>(token.Resource.Split(',').Select(p => p.Trim().ToLowerInvariant()).Where(p => !string.IsNullOrWhiteSpace(p)));
+				HashSet<string> reqResources = new HashSet<string>(Resource.Split(',').Select(p => p.Trim().ToLowerInvariant()).Where(p => !string.IsNullOrWhiteSpace(p)));
+				HashSet<string> forResources = new HashSet<string>((resourceOverride ?? token.Resource!).Split(',').Select(p => p.Trim().ToLowerInvariant()).Where(p => !string.IsNullOrWhiteSpace(p)));
 				if (forResources.Intersect(reqResources).Count() == 0)
 				{
 					if (logger != null) logger.LogDebug("Token validation failed {0}: invalid token resource. present: {1} required: {2}", token, token.Resource, resourceOverride ?? Resource);
@@ -408,7 +409,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 					AllowedIPAddresses = token.AllowedIPAddresses,
 					Expiration = token.Expiration,
 					Protocol = token.Protocol,
-					Resource = token.Resource,
+					Resource = resourceOverride ?? token.Resource,
 					Roles = token.Roles?.Split(',').Select(r => r.Trim()).Where(r => !string.IsNullOrEmpty(r))??new string[0],
 					StartTime = token.StartTime
 				};

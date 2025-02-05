@@ -146,49 +146,60 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 		/// <param name="context"></param>
 		public void OnAuthorization(AuthorizationFilterContext context)
 		{
-			ISASTokenKeyStore tsStore = context.HttpContext.RequestServices.GetService<ISASTokenKeyStore>()!;
-			ILogger logger = context.HttpContext.RequestServices.GetService<ILoggerFactory>()?.CreateLogger(GetType());
-			Microsoft.Extensions.Logging.ILoggerFactory loggerFactory = context.HttpContext.RequestServices.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()!;
-			var resources = context.ActionDescriptor.Parameters
-				.Where(p => p is ControllerParameterDescriptor && ((ControllerParameterDescriptor)p).ParameterInfo.GetCustomAttributes(typeof(SASTokenResourceAttribute), false).Count() > 0)
-				.Select(p =>
-				{
-					object value = BindModelAsync(context, p.Name, p.ParameterType).Result;
-					return new KeyValuePair<string, object>(p.Name, value);
-				}).ToArray();
+            ISASTokenKeyStore tsStore = context.HttpContext.RequestServices.GetService<ISASTokenKeyStore>()!;
+            ILogger? logger = context.HttpContext.RequestServices.GetService<ILoggerFactory>()?.CreateLogger(GetType());
+            Microsoft.Extensions.Logging.ILoggerFactory loggerFactory = context.HttpContext.RequestServices.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()!;
+            string? resource = _resource;
+            SASToken token = context.HttpContext.GetSASToken();
 
-			SASToken token = context.HttpContext.GetSASToken();
-			string resource = _resource;
-			if (resources?.Count() == 1 && string.IsNullOrEmpty(resource)) resource = resources!.First().Value?.ToString() ?? "";
-			else if (resources != null && !string.IsNullOrWhiteSpace(resource))
-			{
-				foreach (var kvp in resources) resource = resource.Replace("{" + kvp.Key + "}", kvp.Value?.ToString() ?? "");
-			}
-			if (!string.IsNullOrEmpty(token.Resource) && !string.IsNullOrEmpty(resource) && token.Resource != resource)
-			{
-				if (logger != null) logger.LogDebug($"Token resource mismatch: {token.Resource}!={resource}");
-				context.Result = new StatusCodeResult(403);
-			}
-			else
-			{
-				token.Resource = resource ?? token.Resource;
-				SASTokenKey? tokenKey;
-				if (!(
-						!token.IsEmpty &&
-						(tokenKey = tsStore.GetAsync(token).Result).HasValue &&
-						tokenKey.Value.Validate(token, context.HttpContext.Request, _roles, resource, context.HttpContext.Connection.RemoteIpAddress, loggerFactory.CreateLogger<SASTokenAuthorizationAttribute>())
-					))
-				{
-					if (logger != null) logger.LogDebug($"Invalid token, returning 403: {token}");
-					context.Result = new StatusCodeResult(403);
-				}
-				else
-				{
-					if (logger != null) logger.LogDebug($"Token validated. Setting User Context");
-					context.HttpContext.User = tokenKey.Value.ToClaimsPrincipal(token, SASTokenAuthenticationDefaults.AuthenticationScheme);
-				}
-			}
-		}
+            var controllerActionDescriptor = context.ActionDescriptor as Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor;
+            var urlResource = controllerActionDescriptor?.MethodInfo?.GetCustomAttributes(typeof(SASTokenResourceAttribute), false)?.Cast<SASTokenResourceAttribute>()?.FirstOrDefault();
+            if (urlResource != null)
+            {
+                var httpRequest = context.HttpContext.Request;
+                resource = urlResource.UriKind == UriKind.Absolute ? $"{httpRequest.Scheme}://{httpRequest.Host}{httpRequest.Path}" : httpRequest.Path;
+            }
+            else
+            {
+                var resources = context.ActionDescriptor.Parameters
+                    .Where(p => p is ControllerParameterDescriptor && ((ControllerParameterDescriptor)p).ParameterInfo.GetCustomAttributes(typeof(SASTokenResourceAttribute), false).Count() > 0)
+                    .Select(p =>
+                    {
+                        object? value = BindModelAsync(context, p.Name, p.ParameterType).Result;
+                        return new KeyValuePair<string, object?>(p.Name, value);
+                    }).ToArray();
 
-	}
-}
+                if (resources?.Count() == 1 && string.IsNullOrEmpty(resource)) resource = resources!.First().Value?.ToString() ?? "";
+                else if (resources != null && !string.IsNullOrWhiteSpace(resource))
+                {
+                    foreach (var kvp in resources) resource = resource.Replace("{" + kvp.Key + "}", kvp.Value?.ToString() ?? "");
+                }
+            }
+
+            if (!string.IsNullOrEmpty(token.Resource) && !string.IsNullOrEmpty(resource) && token.Resource != resource)
+            {
+                if (logger != null) logger.LogDebug($"Token resource mismatch: {token.Resource}!={resource}");
+                context.Result = new StatusCodeResult(403);
+            }
+            else
+            {
+                token.Resource = resource ?? token.Resource;
+                SASTokenKey? tokenKey;
+                if (!(
+                        !token.IsEmpty &&
+                        (tokenKey = tsStore.GetAsync(token).Result).HasValue &&
+                        tokenKey.Value.Validate(token, context.HttpContext.Request, _roles, resource, context.HttpContext.Connection.RemoteIpAddress, loggerFactory.CreateLogger<SASTokenAuthorizationAttribute>())
+                    ))
+                {
+                    if (logger != null) logger.LogDebug($"Invalid token, returning 403: {token}");
+                    context.Result = new StatusCodeResult(403);
+                }
+                else
+                {
+                    if (logger != null) logger.LogDebug($"Token validated. Setting User Context");
+                    context.HttpContext.User = tokenKey.Value.ToClaimsPrincipal(token, SASTokenAuthenticationDefaults.AuthenticationScheme);
+                }
+            }
+
+        }
+    }

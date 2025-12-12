@@ -10,7 +10,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/michaelmcdaniel/Authentication.SASToken</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<PackageTags>SASToken;Authentication;SharedAccessSignature</PackageTags>
+		<PackageTags>SASToken;Authentication;SharedAccessSignature;SAS;shared;token;security;AspNetCore</PackageTags>
 		<PackageId>mcdaniel.ws.AspNetCore.Authentication.SASToken</PackageId>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>

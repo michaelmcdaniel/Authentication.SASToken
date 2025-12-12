@@ -31,7 +31,7 @@ namespace Microsoft.Extensions.DependencyInjection
 		/// <param name="configureOptions"></param>
 		/// <returns>builder</returns>
 
-		public static AuthenticationBuilder AddSASToken(this AuthenticationBuilder builder, string authenticationScheme, string displayName, Action<SASTokenAuthenticationOptions> configureOptions)
+		public static AuthenticationBuilder AddSASToken(this AuthenticationBuilder builder, string authenticationScheme, string? displayName, Action<SASTokenAuthenticationOptions> configureOptions)
         {
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<SASTokenAuthenticationOptions>, PostConfigureSASTokenAuthenticationOptions>());
             builder.Services.AddOptions<SASTokenAuthenticationOptions>(authenticationScheme).Validate(o => true);
@@ -55,7 +55,7 @@ namespace Microsoft.Extensions.DependencyInjection
 		/// <param name="displayName"></param>
 		/// <param name="configureOptions"></param>
 		/// <returns>builder</returns>
-		public static AuthenticationBuilder AddSASTokenKey(this AuthenticationBuilder builder, string authenticationScheme, string displayName, Action<SASTokenKeyOptions> configureOptions)
+		public static AuthenticationBuilder AddSASTokenKey(this AuthenticationBuilder builder, string authenticationScheme, string? displayName, Action<SASTokenKeyOptions> configureOptions)
         {
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<SASTokenKeyOptions>, PostConfigureSASTokenKeyOptions>());
             builder.Services.AddOptions<SASTokenKeyOptions>(authenticationScheme).Validate(o => true);

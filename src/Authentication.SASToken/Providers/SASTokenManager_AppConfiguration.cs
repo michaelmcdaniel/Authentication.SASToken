@@ -27,7 +27,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 		/// <param name="config"></param>
         public SASTokenManager_AppConfiguration(IOptions<SASTokenManager_AppConfiguration.Options> options, IConfiguration config)
         {
-			Uri uri;
+			Uri? uri;
             var settings = config.GetSection(options.Value.SectionName);
             var children = settings.GetChildren().ToList();
             var id = children.FirstOrDefault(c => c.Key == options.Value.FieldName_Id)?.Value;
@@ -54,8 +54,8 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
                 var tokenKey = new SASTokenKey()
                 {
                     Expiration = tsExpiration,
-                    Id = id,
-                    Description = desc,
+                    Id = id??"",
+                    Description = desc??"",
                     Version = version,
                     Secret = secret,
                     Uri = uri,
@@ -107,7 +107,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
                     {
                         Expiration = tsExpiration,
                         Id = id,
-                        Description = desc,
+                        Description = desc??"",
                         Version = version,
                         Secret = secret,
                         Uri = uri,
@@ -137,7 +137,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 		/// </summary>
 		/// <param name="token">The token to use</param>
 		/// <returns>Key if found</returns>
-		public Task<SASTokenKey?> GetAsync(SASToken token) => GetAsync(token.Id);
+		public Task<SASTokenKey?> GetAsync(SASToken token) => GetAsync(token.Id??"");
 
 		/// <summary>
 		/// Returns all SASTokenKeys sorted by Description, Id
@@ -145,7 +145,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 		/// <returns>SASTokenKeys</returns>
         public Task<IEnumerable<SASTokenKey>> GetAllAsync()
         {
-            return Task.FromResult((IEnumerable<SASTokenKey>)(_tokens.Values.OrderBy(tk=>string.IsNullOrWhiteSpace(tk.Value.Description)?tk.Value.Id:tk.Value.Description).Select(tk=>tk.Value).ToArray()));
+            return Task.FromResult((IEnumerable<SASTokenKey>)(_tokens.Values.OrderBy(tk=>tk!=null&&string.IsNullOrWhiteSpace(tk!.Value.Description)?tk.Value.Id:tk!.Value.Description).Select(tk=>tk!.Value).ToArray()));
         }
 
 		/// <summary>

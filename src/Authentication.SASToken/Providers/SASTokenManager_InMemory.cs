@@ -36,7 +36,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 		/// </summary>
 		/// <param name="token">The token to use</param>
 		/// <returns>Key if found</returns>
-		public Task<SASTokenKey?> GetAsync(SASToken token) => GetAsync(token.Id);
+		public Task<SASTokenKey?> GetAsync(SASToken token) => GetAsync(token.Id??"");
 
 		/// <summary>
 		/// Returns all SASTokenKeys sorted by Description, Id
@@ -44,7 +44,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken.Providers
 		/// <returns>SASTokenKeys</returns>
 		public Task<IEnumerable<SASTokenKey>> GetAllAsync()
         {
-			return Task.FromResult((IEnumerable<SASTokenKey>)_tokens.Values.Where(tk => tk is not null).Select(tk => tk.Value!).ToArray());
+			return Task.FromResult((IEnumerable<SASTokenKey>)_tokens.Values.Where(tk => tk is not null).Select(tk => tk!.Value!).ToArray());
         }
 
 		/// <summary>

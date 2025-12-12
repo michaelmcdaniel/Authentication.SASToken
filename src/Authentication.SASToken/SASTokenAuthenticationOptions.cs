@@ -23,7 +23,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 		/// <summary>
 		/// Provides a resolver to get SASTokenKeys
 		/// </summary>
-        public virtual Func<IServiceProvider, Task<ISASTokenKeyResolver>> TokenStoreResolverAsync { get; set; } = (sp) => Task.FromResult(sp.GetService<ISASTokenKeyResolver>());
+        public virtual Func<IServiceProvider, Task<ISASTokenKeyResolver>> TokenStoreResolverAsync { get; set; } = (sp) => Task.FromResult(sp.GetRequiredService<ISASTokenKeyResolver>());
 
         /// <summary>
         /// The Provider may be assigned to an instance of an object created by the application at startup time. The handler

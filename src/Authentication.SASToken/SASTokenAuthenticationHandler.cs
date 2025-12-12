@@ -19,7 +19,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 	/// <typeparam name="T">SASTokenAuthenticationOptions</typeparam>
 	public class SASTokenAuthenticationHandler<T> : AuthenticationHandler<T> where T : SASTokenAuthenticationOptions, new()
     {
-		private ILogger<SASTokenAuthenticationHandler<T>> _logger = null;
+		private ILogger<SASTokenAuthenticationHandler<T>>? _logger = null;
 
 		/// <summary>
 		/// Initializes a new instance of <see cref="SASTokenAuthenticationOptions"/>.
@@ -68,7 +68,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
             // If no authorization header found, nothing to process further
             if (!token.HasValue || token.Value.IsEmpty)
             {
-				_logger.LogDebug("No token - AuthenticateResult.NoResult()");
+				_logger?.LogDebug("No token - AuthenticateResult.NoResult()");
 				return AuthenticateResult.NoResult();
             }
 
@@ -76,14 +76,14 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
             ISASTokenKeyResolver store = await Options.TokenStoreResolverAsync(Context.RequestServices);
             if (store is null)
             {
-				_logger.LogError("ISASTokenKeyResolver not found - AuthenticateResult.Fail()");
+				_logger?.LogError("ISASTokenKeyResolver not found - AuthenticateResult.Fail()");
 				return AuthenticateResult.Fail("SASTokenKeyResolver not found");
             }
 
             var tokenKey = await store.GetAsync(token.Value);
             if (tokenKey is null)
             {
-				_logger.LogInformation("SASTokenKey not found - AuthenticateResult.Fail()");
+				_logger?.LogInformation("SASTokenKey not found - AuthenticateResult.Fail()");
 				return AuthenticateResult.Fail("SASTokenKey not found");
             }
 
@@ -91,10 +91,10 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
             await Events.Authenticating(authenticatingContext);
             if (!tokenKey.Value.Validate(token.Value, Request, null, null, Request.HttpContext.Connection.RemoteIpAddress, Logger))
             {
-				_logger.LogDebug("SASToken validation failed - AuthenticateResult.Fail()");
+				_logger?.LogDebug("SASToken validation failed - AuthenticateResult.Fail()");
 				return AuthenticateResult.Fail("Invalid SASToken");
             }
-			_logger.LogDebug($"SASToken validation succeeded {0}", token.Value.Id);
+			_logger?.LogDebug($"SASToken validation succeeded {0}", token.Value.Id);
 
 			var principal = tokenKey.Value.ToClaimsPrincipal(token.Value, Scheme.Name);
             var authenticatedContext = new SASTokenAuthenticatedContext(Context, Scheme, Options, principal);

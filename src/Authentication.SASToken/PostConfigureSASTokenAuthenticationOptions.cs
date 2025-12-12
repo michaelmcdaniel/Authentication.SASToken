@@ -16,7 +16,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
         /// <param name="name"></param>
         /// <param name="options"></param>
         /// <exception cref="ArgumentNullException"></exception>
-		public void PostConfigure(string name, SASTokenAuthenticationOptions options)
+		public void PostConfigure(string? name, SASTokenAuthenticationOptions options)
         {
             if (name is null)
             {

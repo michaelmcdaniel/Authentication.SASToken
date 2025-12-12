@@ -18,8 +18,8 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 	/// </summary>
 	public class SASTokenAuthorizationAttribute : ActionFilterAttribute, IAuthorizationFilter
 	{
-		private IEnumerable<string> _roles = null;
-		private string _resource = null;
+		private IEnumerable<string>? _roles = null;
+		private string? _resource = null;
 
 		/// <summary>
 		/// Validates endpoint.
@@ -74,7 +74,7 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 		/// <param name="parameterName"></param>
 		/// <param name="parameterType"></param>
 		/// <returns></returns>
-		private async Task<object> BindModelAsync(AuthorizationFilterContext context, string parameterName, Type parameterType)
+		private async Task<object?> BindModelAsync(AuthorizationFilterContext context, string parameterName, Type parameterType)
 		{
 			// Get required services
 			var modelMetadataProvider = context.HttpContext.RequestServices.GetRequiredService<IModelMetadataProvider>();
@@ -203,3 +203,4 @@ namespace mcdaniel.ws.AspNetCore.Authentication.SASToken
 
         }
     }
+}

@@ -47,12 +47,12 @@ namespace Microsoft.Extensions.DependencyInjection
         /// &#160;&#160;},<br/>
         /// ...</para>
         /// </remarks>
-		public static IServiceCollection AddSASTokenStore_AppConfiguration(this IServiceCollection services, Action<SASTokenManager_AppConfiguration.Options> configure = null)
+		public static IServiceCollection AddSASTokenStore_AppConfiguration(this IServiceCollection services, Action<SASTokenManager_AppConfiguration.Options>? configure = null)
         {
             services.Configure(configure??new Action<SASTokenManager_AppConfiguration.Options>(_ => { }));
             services.AddSingleton<SASTokenManager_AppConfiguration>();
-            services.AddTransient<ISASTokenKeyResolver>(sp => sp.GetService<SASTokenManager_AppConfiguration>());
-            services.AddTransient<ISASTokenKeyStore>(sp => sp.GetService<SASTokenManager_AppConfiguration>());
+            services.AddTransient<ISASTokenKeyResolver>(sp => sp.GetRequiredService<SASTokenManager_AppConfiguration>());
+            services.AddTransient<ISASTokenKeyStore>(sp => sp.GetRequiredService<SASTokenManager_AppConfiguration>());
             return services;
         }
 
@@ -64,8 +64,8 @@ namespace Microsoft.Extensions.DependencyInjection
 		public static IServiceCollection AddSASTokenStore_InMemory(this IServiceCollection services)
 		{
 			services.AddSingleton<SASTokenManager_InMemory>();
-			services.AddTransient<ISASTokenKeyResolver>(sp => sp.GetService<SASTokenManager_InMemory>());
-			services.AddTransient<ISASTokenKeyStore>(sp => sp.GetService<SASTokenManager_InMemory>());
+			services.AddTransient<ISASTokenKeyResolver>(sp => sp.GetRequiredService<SASTokenManager_InMemory>());
+			services.AddTransient<ISASTokenKeyStore>(sp => sp.GetRequiredService<SASTokenManager_InMemory>());
 			return services;
 		}
 
@@ -79,8 +79,8 @@ namespace Microsoft.Extensions.DependencyInjection
 		{
 			services.Configure(configure);
 			services.AddSingleton<SASTokenManager_File>();
-			services.AddTransient<ISASTokenKeyResolver>(sp => sp.GetService<SASTokenManager_File>());
-			services.AddTransient<ISASTokenKeyStore>(sp => sp.GetService<SASTokenManager_File>());
+			services.AddTransient<ISASTokenKeyResolver>(sp => sp.GetRequiredService<SASTokenManager_File>());
+			services.AddTransient<ISASTokenKeyStore>(sp => sp.GetRequiredService<SASTokenManager_File>());
 			return services;
 		}
 

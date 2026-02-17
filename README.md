@@ -172,7 +172,7 @@ public IActionResult GetUsers()
 
 ---
 
-# Inline Validation
+## Inline Validation
 
 Inline validation does **not** assign `HttpContext.User`.
 
@@ -214,7 +214,7 @@ public async Task<IActionResult> GetUsersAsync([FromServices] ISASTokenKeyStore 
 }
 ```
 
-### Using SASToken with Existing Authentication (OAuth / JWT)
+## Using SASToken with Existing Authentication (OAuth / JWT)
 
 If your application already uses OAuth, JWT Bearer, or other authentication schemes with a global `[Authorize]` filter, you may need to explicitly allow anonymous access for SASToken-protected endpoints:
 

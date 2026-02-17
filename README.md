@@ -513,6 +513,20 @@ This prevents downtime during secret rotation.
 - Store secrets outside source control (User Secrets, Azure Key Vault, environment variables)  
 - Restrict by IP and protocol when possible  
 
+### Replay Attack Considerations
+
+SASTokens are cryptographically signed and may include expiration (`se`) and optional start time (`st`) constraints. However, they do not inherently prevent replay within their valid time window.
+
+If a valid token is intercepted, it may be reused until it expires unless additional protections are implemented.
+
+To reduce replay risk:
+
+- Keep expiration windows short
+- Restrict by IP address (`sip`) when possible
+- Consider additional application-level nonce or one-time token validation for high-risk operations
+
+If your threat model requires strict replay prevention, you should implement request uniqueness tracking or use a stateful authentication mechanism.
+
 ---
 
 # When Not to Use This

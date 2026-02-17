@@ -1,116 +1,432 @@
-# Authentication.SASToken
-Authentication library to protect endpoints using Shared Access Signatures (SASToken)
+﻿# Authentication.SASToken  
+### ASP.NET Core Shared Access Signature (SAS) / HMAC Signed Request Authentication
 
-SASTokens can be composed of unique identifier, version, roles [or permissions], signature, expiration, start time, resource, ip [or range] and/or scheme.  Signatures are generated from a secret using HMACSHA256 where the version describes the information used to populate the signature data.  In the simplest form, the signature includes the Uri and the expiration of the token.  The Id specifies which secret to use to generate the signature.  When validating, the server will take it's own information about the request and generate a signature to compare with what the client has sent.  Roles, resource, allowed ip addresses, and schemes can be used to add additional security to endpoints.
+[![NuGet](https://img.shields.io/nuget/v/mcdaniel.ws.AspNetCore.Authentication.SASToken.svg)](https://www.nuget.org/packages/mcdaniel.ws.AspNetCore.Authentication.SASToken)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/mcdaniel.ws.AspNetCore.Authentication.SASToken.svg)](https://www.nuget.org/packages/mcdaniel.ws.AspNetCore.Authentication.SASToken)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Tokens are verified using a **SASTokenKey** which contains all the properties of a SASToken with the addition of the Uri and secret used to generate the signature.  Generated secrets are 32 bytes, base64 encoded.
+**Authentication.SASToken** is an ASP.NET Core authentication and authorization middleware that implements **Shared Access Signature (SAS) style HMAC authentication** for APIs. It enables secure **signed URL** and **signed request** authorization using HMACSHA256 and shared secrets.
 
-This implementation allows for tokens to be created using wildcard verification of the url path given at runtime using either header or query string.
+This library is designed for service-to-service API security, temporary access links, and object-level authorization scenarios where OAuth may be unnecessary. It provides short-lived, cryptographically signed tokens that can restrict access by path, resource, role, IP address, protocol, and signature scope.
 
-#### Url Authentication Example
+
+- Expiration windows
+- Start times
+- Role/permission enforcement
+- Resource scoping
+- IP restrictions
+- HTTP/HTTPS protocol restrictions
+- Wildcard path matching (`*` / `**`)
+
+This pattern is similar to Azure SAS tokens, pre-signed URLs, and other HMAC-based API authentication mechanisms.
+
+---
+
+## Table of Contents
+
+- [Install](#install)
+- [Quick Start](#quick-start)
+- [Protecting Controllers or Endpoints](#protecting-controllers-or-endpoints)
+- [Inline Validation](#inline-validation)
+- [Token Formats](#token-formats)
+- [HMAC Signature Versioning](#hmac-signature-versioning-sv)
+- [Wildcard Path Matching](#wildcard-path-matching)
+- [Resource Restrictions (`sr`)](#resource-restrictions-sr)
+- [Claims Created on Authentication](#claims-created-on-authentication)
+- [Generating Tokens](#generating-tokens)
+- [Rollover Guidance](#rollover-guidance)
+- [Security Recommendations](#security-recommendations)
+- [When Not to Use This](#when-not-to-use-this)
+- [License](#license)
+
+---
+
+# Install
+
+```bash
+dotnet add package mcdaniel.ws.AspNetCore.Authentication.SASToken
 ```
-https://example.com/api/get-user?api-version=2024-01&sp=https%3A%2F%2Fexample.com%2Fapi%2F**&sig=yjqFaDKxaVBXLhNBIxl%2FhFjVJeEe1UUIzI%2F28LtdJ0U%3D&se=1716400963&skn=99333392-1132-402a-838e-b4962b05c67e
-```
-#### Header Authentication Example
-```
-GET https://example.com/api/get-user HTTP/1.1
-Host: example.com
-Authorization: SharedAccessSignature  api-version=2024-01&sp=https%3A%2F%2Fexample.com%2Fapi%2F**&sig=yjqFaDKxaVBXLhNBIxl%2FhFjVJeEe1UUIzI%2F28LtdJ0U%3D&se=1716400963&skn=99333392-1132-402a-838e-b4962b05c67e
-```
 
-## Rollover Guidance
-In many cases, it best to add at least 2 SASTokenKeys for rollover purposes.  When you want to expire SASTokens, you can use the secondary SASTokenKey to issue updated tokens to clients. After all clients have been updated, simply remove the old SASTokenKey and add another for a future rollover.
+NuGet package:
 
+`mcdaniel.ws.AspNetCore.Authentication.SASToken`
 
-## Wildcard paths
-Path validation supports a wildcard character of an asterisk **\***. Single asterisk mean anything for a single segment, where as double asterick **\*\*** means match across one or more segments.  Path matching is case-insensitive.
+---
 
-#### Matching Examples
-**url request:** /segment1/segment2/segment3
+# Quick Start
 
-**matching SASTokenKey.Uri** 
+## 1️⃣ Add a SASToken Key Store
 
-**/segment1/segment2/segment3** - exact path match only\
-**/segment1/segment2/segment\*** - match root segment '/segment1/segment2/' and 3rd segment must starts wit 'segment' *(only 3 segments allowed)*\
-**/seg\*\*** - match any path starting with 'seg' *('/seg/' included)*\
-**/\*\***  - match anything under root '/'\
-**/\*\*/segment3**  - match all paths that end with 'segment3'\
-**/\*/\*/segment3** - match any 2 segment names and ends with 'segment3' *(only 3 segments allowed)*\
-**/segment1/\*\*** - match any endpoints under '/segment1' - *(at least 1 non-zero length sub-segment is required)*\
-**/segment1/\*/\*** - match root '/segment1' and require 2 non-zero length sub-segments,  *(only 3 segments allowed)*\
-**/segment1/segment2/\*** - match root segments '/segment1/segment2/' with any non-zero length 3rd segment *(only 3 segments allowed)*\
-**/s\*/\*2/\*me\*** - first segment must start with 's', second segment must end with '2', and third segment must contain the word 'me' *(only 3 
-segments allowed)*
+The library includes:
 
+- In-memory store
+- AppSettings (`appsettings.json`) store
+- File-based store
 
-# Configuration
-Default implementation includes SASTokenKey Store for in-memory and app-configuration support, but it is extensible for other persistence.
+---
 
+## Option A — appsettings.json Store (Recommended)
 
-## Using App Configuration
+### Add configuration
 
-#### Configuration in appsettings.json
-Add the following to your appsettings.json for a **SASTokenKey**.  This will be used to verify signatures.
-*change the path to the url you wish to restrict*
-```
-"SASTokenKeys": {
-        "99333392-1132-402a-838e-b4962b05c67e" : {
-                "description":"Example",
-                "path":"https://example.com/api/**",
-                "version":"2024-01",
-                "secret":"KBpx2E2FH/WM2hEuDr82m0OyDyscyGcvU/4Zn40AOFQ=",
-                "expire":"0.00:05:00",
-                "resource":"users",
-                "ip":"0.0.0.0/0",
-                "protocol":"https"
-        }
+```json
+{
+  "SASTokenKeys": {
+    "99333392-1132-402a-838e-b4962b05c67e": {
+      "description": "Example key",
+      "path": "https://example.com/api/**",
+      "version": "2024-04",
+      "secret": "KBpx2E2FH/WM2hEuDr82m0OyDyscyGcvU/4Zn40AOFQ=",
+      "expire": "0.00:05:00",
+      "resource": "users",
+      "ip": "::/0",
+      "protocol": "https"
+    }
+  }
 }
 ```
 
-Add the following to your program.cs (or startup.cs)
-```
-services.AddSASTokenStore_AppConfiguration();
+### Register the store
+
+```csharp
+builder.Services.AddSASTokenStore_AppConfiguration();
+builder.Services.AddAuthentication().AddSASToken();
+...
+app.UseAuthentication();
+app.UseAuthorization();
+
 ```
 
-## Using In-Memory Configuration
-Add the following to your program.cs (or startup.cs)
-```
+---
+
+## Option B — In-Memory Store
+
+```csharp
 builder.Services.AddSASTokenStore_InMemory();
+
 var app = builder.Build();
-app.UseSASTokenStore_InMemory((services,tokenStore)=>{
-	tokenStore.SaveAsync(new SASTokenKey() {
-		Id = "99333392-1132-402a-838e-b4962b05c67e",
-		Name = "Example",
-		Secret = "KBpx2E2FH/WM2hEuDr82m0OyDyscyGcvU/4Zn40AOFQ=",
-		Uri = new Uri("https://example.com/api/**"),
-		Version = SASTokenKey.VERSION_ABSOLUTE_URI,
-		Expiration = TimeSpan.FromMinutes(5.0),
-		Resource = "users",
-		AllowedIPAddresses = "192.168.1.10",
-		Protocol = "https,http"
-	}).Result;
+
+app.UseSASTokenStore_InMemory((services, tokenStore) =>
+{
+    tokenStore.SaveAsync(new SASTokenKey
+    {
+        Id = Guid.Parse("99333392-1132-402a-838e-b4962b05c67e"),
+        Description = "Example key",
+        Uri = new Uri("https://example.com/api/**"),
+        Version = "2024-04",
+        Secret = "KBpx2E2FH/WM2hEuDr82m0OyDyscyGcvU/4Zn40AOFQ=",
+        Expiration = TimeSpan.FromMinutes(5),
+        Resource = "users",
+        IpRange = "::/0",
+        Protocol = "https"
+    });
 });
 ```
 
+---
 
+## Option C — File Store
+*Uses `IDataProtectionProvider` (if configured) to encrypt secrets at rest.*
 
-## Using Files for key storage
-Add the following to your program.cs (or startup.cs)
-*Uses IDataProtectionProvider (if configured) for secrets*
-```
-services.AddDataProtection();
-services.AddSASTokenStore_File(options => {
-	options.BasePath = "~/secrets"; // supports full path or default of "~/" (IWebHostEnvironment.ContentRootPath)
-	//options.FileNameFormat = "{Id}.json"; // also support properties ""{Description}\{Id}.json"
-	//options.SearchPattern = "*.json"; // should match FileNameFormat
-	//options.PreCache = true; // cache in-memory cache onload/save
-	//options.SlidingCacheTime = TimeSpan.Zero; // indefinite in-memory caching
-	//options.RemoveEmptyFolders = true; // used with folder in FileNameFormat - will remove empty folders
-	//options.DefaultKeyName = Guid.Empty.ToString(); // default key name where Id is empty
+```csharp
+builder.Services.AddDataProtection();
+builder.Services.AddSASTokenStore_File(options =>
+{
+    options.BasePath = "~/secrets";
+    // options.FileNameFormat = "{Id}.json";
+    // options.SearchPattern = "*.json";
+    // options.PreCache = true;
+    // options.SlidingCacheTime = TimeSpan.Zero;
+    // options.RemoveEmptyFolders = true;
+    // options.DefaultKeyName = Guid.Empty.ToString();
 });
 ```
 
+---
 
+# Protecting Controllers or Endpoints
+
+## Protect Entire Controller
+
+```csharp
+[SASTokenAuthorization]
+[ApiController]
+public class MyProtectedController : ControllerBase
+{
+    [HttpGet("/api/get-user")]
+    public IActionResult GetUser() => Ok(new { ok = true });
+}
+```
+
+---
+
+## Protect Specific Actions with Roles
+
+```csharp
+[SASTokenAuthorization(new[] { "Admin", "PowerUser" })]
+public IActionResult GetUsers()
+{
+    return Ok();
+}
+```
+
+---
+
+# Inline Validation
+
+Inline validation does **not** assign `HttpContext.User`.
+
+This approach is useful for SDK-style usage, minimal APIs, or when attribute-based authorization is not desired.
+
+```csharp
+// FROM HEADER
+public async Task<IActionResult> GetUsersAsync([FromServices] ISASTokenKeyStore store)
+{
+    if (!await store.ValidateAsync(HttpContext))
+        return Forbid();
+
+    return Json((await _sdk.GetUsersAsync()).ToClientModel());
+}
+
+
+// FROM QUERY STRING
+public async Task<IActionResult> GetUsersAsync([FromServices] ISASTokenKeyStore store, [FromQuery(Name = "sv")] string v, [FromQuery] string sig, [FromQuery] long se, [FromQuery] string skn, [FromQuery] string? sp = null, [FromQuery] string? sip = null, [FromQuery] string? sr = null, [FromQuery] string? spr = null, [FromQuery] long st = 0)
+{
+	var token = new SASToken()
+	{
+		Id = skn,
+		Expiration = DateTimeOffset.FromUnixTimeSeconds(se),
+		Signature = sig,
+		Roles = sp,
+		Version = v,
+		AllowedIPAddresses = sip,
+		Protocol = spr,
+		Resource = sr,
+		StartTime = st == 0 ? DateTimeOffset.MinValue : DateTimeOffset.FromUnixTimeSeconds(st)
+	};
+	string[] anyUserInRoles = new string[] { "Admin", "PowerUsers" };
+	var tokenKey = await store.GetAsync(token);
+	if (tokenKey == null ||
+        !tokenKey.Validate(token, Request, anyUserInRoles, null, HttpContext.Connection.RemoteIpAddress, _logger)) 
+        return Forbid();
+
+	return Json((await _sdk.GetUsersAsync()).ToClientModel()); 
+}
+```
+
+### Using SASToken with Existing Authentication (OAuth / JWT)
+
+If your application already uses OAuth, JWT Bearer, or other authentication schemes with a global `[Authorize]` filter, you may need to explicitly allow anonymous access for SASToken-protected endpoints:
+
+```csharp
+[AllowAnonymous]
+[SASTokenAuthorization]
+[HttpGet("/api/users/{userId}")]
+public IActionResult GetUser([SASTokenResource] Guid userId)
+{
+    ...
+}
+```
+This ensures the request is not rejected by another authentication scheme before SASToken validation occurs.
+
+Alternatively, you may configure SASToken as a named authentication scheme and apply it explicitly where needed.
+
+---
+
+# Token Formats
+
+The library supports both **Authorization header tokens** and **query string tokens**.
+
+## Recommended: Authorization Header (Preferred)
+
+Using the `Authorization` header is the recommended and more secure approach.
+
+**Why it is preferred:**
+
+
+- Tokens are **not logged in URLs** (reverse proxies, web servers, analytics tools often log full URLs)
+- Tokens are **not stored in browser history**
+- Tokens are less likely to be accidentally shared via copied links
+- Cleaner separation between routing and authentication
+- Follows standard HTTP authentication patterns
+
+Example:
+
+```
+GET https://example.com/api/get-user HTTP/1.1
+Host: example.com
+Authorization: SharedAccessSignature sv=2024-04&sr=users&sp=Read%2CWrite&sig=SIGNATURE&se=1716400963&skn=99333392-1132-402a-838e-b4962b05c67e&spr=https&sip=%3A%3A%2F0
+```
+
+---
+
+## Query String Tokens
+
+Primarily intended for:
+
+- Signed URLs
+- Temporary download links
+- Environments where headers cannot be set
+
+Example:
+
+```
+https://example.com/api/get-user?sv=2024-04&sr=users&sp=Read%2CWrite&sig=SIGNATURE&se=1716400963&skn=99333392-1132-402a-838e-b4962b05c67e&spr=https&sip=%3A%3A%2F0
+```
+
+> For production APIs, prefer the Authorization header unless signed URLs are required.
+
+---
+
+# HMAC Signature Versioning  (`sv`)
+
+The `sv` (signature version) parameter controls **what parts of the request are included in the HMAC signature**.  
+Different versions allow different levels of strictness and flexibility.
+
+- **2024-04** *(Default — Most Secure)*  
+  Signs the **full absolute URI** (scheme + host + full path).  
+  - Most restrictive  
+  - Token is bound to an exact endpoint  
+  - Best for internal APIs where the domain is fixed  
+
+- **2024-05**  
+  Signs the **host only** (domain).  
+  - Allows the token to be reused across multiple paths  
+  - Still locked to a specific domain  
+  - Useful when protecting many endpoints under the same API  
+
+- **2024-06**  
+  Signs the **relative URI (path only)**.  
+  - Not bound to a specific host  
+  - Useful behind reverse proxies, load balancers, or multi-environment deployments  
+  - Most flexible, but least restrictive  
+
+### Choosing a Version
+
+| Version   | Flexibility | Security Strictness | Recommended Use |
+|------------|------------|--------------------|------------------|
+| 2024-04   | Low        | High               | Default for most APIs |
+| 2024-05   | Medium     | Medium             | Multi-route APIs on same host |
+| 2024-06   | High       | Lower              | Proxy / multi-environment scenarios |
+
+> If unsure, use **2024-04**.
+
+
+---
+
+# Wildcard Path Matching
+
+- `*` → Matches a single segment  
+- `**` → Matches one or more segments  
+
+Matching is case-insensitive.
+
+### Example
+
+Request:
+
+```
+/segment1/segment2/segment3
+```
+
+Valid key paths:
+
+```
+/segment1/segment2/segment3
+/segment1/segment2/segment*
+/seg**
+/**
+/**/segment3
+/*/*/segment3
+/segment1/**
+```
+
+---
+
+# Resource Restrictions (`sr`)
+
+SASTokens can optionally include a **resource identifier** (`sr`) that is validated during authentication.
+
+A resource can represent either:
+
+1. A **logical domain** (e.g., `users`, `orders`, `reports`)
+2. A **specific resource instance** (e.g., a single user GUID)
+
+This allows tokens to be bound not only to a route, but to the *exact object* being accessed.
+
+---
+
+## Example: Binding a Token to a Specific User (GUID)
+
+Suppose you have an endpoint:
+
+```
+GET /api/users/{userId}
+```
+
+Where `userId` is a GUID.
+
+You can require that the token include: `sr=3f2b2b6a-7b51-4e4d-b6aa-3f9a24c6c5b1`
+
+```csharp
+[HttpGet("/api/users/{userId}")]
+public IActionResult GetUser([SASTokenResource] Guid userId)
+{
+    ...
+}
+```
+The `[SASTokenResource]` attribute automatically binds the `sr` value from the token to the userId parameter and no additional validation logic is required in the controller.
+
+During validation:
+ - The token must include an `sr` value
+ - The `sr` value must match the route parameter value
+ - If they do not match, validation fails
+
+This ensures the token is valid only for that specific user and cannot be reused for another \{userId}.
+
+### Why this is useful
+
+- Prevents a token issued for one user from being reused for another
+- Enables signed-link style access to a single resource
+- Supports temporary or delegated access to a specific object
+- Strengthens object-level authorization
+
+
+---
+
+## Resource vs Path vs Roles
+
+These controls operate at different layers:
+
+| Restriction | Binds the token to… | Example |
+|------------|----------------------|---------|
+| Path (key `path`) | Route or route pattern | `/api/users/**` |
+| Resource (`sr`) | Domain name or specific object id | `users` or `{userId-guid}` |
+| Roles (`sp`) | Permissions granted within the resource | `Read`, `Write` |
+
+> Path restriction limits *where* a token can be used.  
+> Resource restriction limits *what specific object* it can access.  
+> Roles limit *what actions* can be performed.
+
+---
+
+# Claims Created on Authentication
+
+When a SASToken is authenticated using attributes or configuration, `HttpContext.User` is set to a ClaimsPrincipal that includes the details about the SASTokenKey used as well as roles encoded in the signature.
+
+#### Issued Claims
+| Type | Value | Cardinality |
+| ---- | ----- | ----------- |
+| [ClaimTypes.NameIdentifier](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.nameidentifier 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier') | SASTokenKey.Id | 1..1 |
+| [ClaimTypes.Uri](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.uri 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/uri') | SASTokenKey.Uri | 1..1 |
+| [ClaimTypes.Version](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.version 'http://schemas.microsoft.com/ws/2008/06/identity/claims/version') | SASToken.Version | 1..1 |
+| [ClaimTypes.Expiration](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.expiration 'http://schemas.microsoft.com/ws/2008/06/identity/claims/expiration') | SASToken.Expiration.ToUnixTimeSeconds() | 1..1 |
+| [ClaimTypes.System](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.system 'http://schemas.microsoft.com/ws/2008/06/identity/claims/system') | SASToken.Resource | 1..N (comma separated) |
+| [ClaimTypes.Role](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.role 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role') | SASToken.Roles.Split(',') | 0..N |
+
+
+
+---
 # Generating Tokens
 Included is a console application **Authentication.SASToken.Generator** to generate new SASTokenKeys and SASTokens.  Running the console will allow you to create the required configuration and a valid SASToken for authentication.
 
@@ -172,76 +488,45 @@ Url: https://example.com/api/get-user
 Token Validated
 ...
 ```
-
 You can copy and paste the appsettings.json format into your user secrets for later SASToken generation.
 
-# Adding Authentication to Endpoints
-There are several ways to protect endpoints using SASTokens. 
+---
 
-When a SASToken is authenticated using attributes or configuration, the HttpContext User is set to a ClaimsPrincipal that includes the details about the SASTokenKey used as well as roles encoded in the signature.
+# Rollover Guidance
+For safe secret rotation:
 
-#### Issued Claims
-| Type | Value | Cardinality |
-| ---- | ----- | ----------- |
-| [ClaimTypes.NameIdentifier](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.nameidentifier 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier') | SASTokenKey.Id | 1..1 |
-| [ClaimTypes.Uri](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.uri 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/uri') | SASTokenKey.Uri | 1..1 |
-| [ClaimTypes.Version](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.version 'http://schemas.microsoft.com/ws/2008/06/identity/claims/version') | SASToken.Version | 1..1 |
-| [ClaimTypes.Expiration](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.expiration 'http://schemas.microsoft.com/ws/2008/06/identity/claims/expiration') | SASToken.Expiration.ToUnixTimeSeconds() | 1..1 |
-| [ClaimTypes.System](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.system 'http://schemas.microsoft.com/ws/2008/06/identity/claims/system') | SASToken.Resource | 1..N (comma separated) |
-| [ClaimTypes.Role](https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimtypes.role 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role') | SASToken.Roles.Split(',') | 0..N |
+1. Maintain at least two active keys  
+2. Issue new tokens with the new key  
+3. Wait for client refresh  
+4. Remove the old key  
+5. Add a standby key for next rotation  
 
-After adding the configuration, you can:
-### Protect endpoints or entire controllers via attribute
-```
-// Allow all SASTokens matching - route must match SASTokenKey.Uri
-[SASTokenAuthorization]
-public class MyProtectedController() { ... } 
+This prevents downtime during secret rotation.
 
-// Allow Admins or PowerUsers
-[SASTokenAuthorization(new string[] { "Admin", "PowerUser" })]
-public IActionResult GetUsers() => _impl.GetUsers().ToClientModel(); 
+---
 
-// Protect specific resource - requires token with id as resource.
-[SASTokenAuthorization]
-public IActionResult GetUser([SASTokenResource]Guid id) => _impl.GetUser(id).ToClientModel(); 
-```
+# Security Recommendations
 
-### Protect entire paths via configuration in program.cs (or startup.cs)
-```
-services.AddAuthentication().AddSASToken(options => {...});
-```
+- Always use HTTPS in production  
+- Keep expiration times short (minutes, not days)  
+- Rotate secrets regularly  
+- Store secrets outside source control (User Secrets, Azure Key Vault, environment variables)  
+- Restrict by IP and protocol when possible  
 
-### Inline Validation 
-*Please note that inline validation does not assign the HttpContext.User*
-```
-// FROM HEADER
-public async Task<IActionResult> GetUsersAsync([FromServices] ISASTokenKeyStore store)
-{
-	if (!await store.ValidateAsync(HttpContext)) return Forbid();
-	return Json((await _sdk.GetUsersAsync()).ToClientModel()); 
-}
+---
 
-// FROM QUERY STRING
-public async Task<IActionResult> GetUsersAsync([FromServices] ISASTokenKeyStore store, [FromQuery(Name = "sv")] string v, [FromQuery] string sig, [FromQuery] long se, [FromQuery] string skn, [FromQuery] string? sp = null, [FromQuery] string? sip = null, [FromQuery] string? sr = null, [FromQuery] string? spr = null, [FromQuery] long st = 0)
-{
-	var token = new SASToken()
-	{
-		Id = skn,
-		Expiration = DateTimeOffset.FromUnixTimeSeconds(se),
-		Signature = sig,
-		Roles = sp,
-		Version = v,
-		AllowedIPAddresses = sip,
-		Protocol = spr,
-		Resource = sr,
-		StartTime = st == 0 ? DateTimeOffset.MinValue : DateTimeOffset.FromUnixTimeSeconds(st)
-	};
-	string[] anyUserInRoles = new string[] { "Admin", "PowerUsers" };
-	var tokenKey = await _tokenStore.GetAsync(token);
-	if (!tokenKey?.Validate(token, Request, anyUserInRoles, null, HttpContext.Connection.RemoteIpAddress, _logger) ?? false) return Forbid();
+# When Not to Use This
 
-	return Json((await _sdk.GetUsersAsync()).ToClientModel()); 
-}
+This library is not intended to replace OAuth/OpenID Connect for:
 
-```
+- End-user authentication
+- Browser-based login flows
+- Third-party delegated authorization
 
+It is best suited for service-to-service authentication and signed URL scenarios.
+
+---
+
+# License
+
+MIT — see [LICENSE](LICENSE)
